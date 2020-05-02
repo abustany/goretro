@@ -1,0 +1,9 @@
+.Room {
+  display: flex;
+  justify-content: space-between;
+}
+
+.Room RoomColumn {
+  width: 32%;
+  height: 100%;
+}
