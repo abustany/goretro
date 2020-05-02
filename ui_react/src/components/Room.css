@@ -1,0 +1,23 @@
+.Room {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  height: 100%;
+}
+
+.Room .RoomColumn {
+  width: 32%;
+  height: 100%;
+}
+
+@media (max-width: 800px) {
+  .Room {
+    display: block;
+  }
+
+  .Room .RoomColumn {
+    width: 90%;
+    margin: auto;
+    height: 100%;
+  }
+}
