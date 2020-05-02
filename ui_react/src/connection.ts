@@ -3,7 +3,7 @@ import { EventBus } from './event_bus';
 const CLIENT_ID_LEN = 16;
 const SECRET_LEN = 64;
 
-export default class Conn {
+export default class Connection {
   clientId = randomID(CLIENT_ID_LEN)
   secret = randomID(SECRET_LEN)
   eventBus = new EventBus()
