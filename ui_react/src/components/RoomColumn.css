@@ -1,0 +1,12 @@
+.Notes {
+  background-color: #FAA;
+  padding: 1em;
+  margin: 1em;
+  border-radius: 1em;
+  height: 100%;
+}
+
+.Note {
+  background-color: white;
+  margin: 1em;
+}
