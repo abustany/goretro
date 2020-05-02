@@ -2,25 +2,33 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
+var state = {
+  name: null,
+  conn: null, // also means Identified.
+  room: null,
+}
+
 function App() {
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h1>Goretro</h1>
+
+      { childComponent(state) }
     </div>
   );
+}
+
+function childComponent(state) {
+  if (!state.name) {
+    return "Login Component"
+  }
+
+  if (!state.room) {
+    return "Join Room"
+  }
+
+  return "Room Component"
 }
 
 export default App;
