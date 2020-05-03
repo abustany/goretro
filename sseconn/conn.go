@@ -127,6 +127,10 @@ func ClientSecretFromString(s string) (ClientSecret, error) {
 	return c, nil
 }
 
+func (c ClientSecret) String() string {
+	return base64.URLEncoding.EncodeToString(c[:])
+}
+
 type command struct {
 	Name     string `json:"name"`
 	ClientID string `json:"clientId"`

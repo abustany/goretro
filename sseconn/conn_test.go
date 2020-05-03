@@ -21,13 +21,18 @@ func TestHelloKeepaliveGoodbye(t *testing.T) {
 	defer server.Close()
 
 	baseURL := server.URL + "/api/"
-	clientID, err := ClientIDFromString("NUaf2T7Vd7TdTFa4iH89zSYWad31D7gYM-TMOk6xjznneieSwxLLEbjf1X2BcYHqp09F6mQoSQspYp6nIuCjNQ==")
+	clientID, err := ClientIDFromString("VHUFS_CXZf1rn4IFPRY7fA==")
 	if err != nil {
 		t.Fatalf("error parsing client ID: %s", err)
 	}
 
+	clientSecret, err := ClientSecretFromString("R0sxpQUrf7Yc2_uqbQi6E_YJUXUbKqXM-v7dm_m9qe-LuEAtR-ST9IUvwn31_dgSFMeJf51XVhZA-1XhytCnjg==")
+	if err != nil {
+		t.Fatalf("error parsing client secret: %s", err)
+	}
+
 	// 1. Send hello command
-	helloRes, err := postHello(baseURL, clientID.String())
+	helloRes, err := postHello(baseURL, clientID.String(), clientSecret.String())
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -45,20 +50,24 @@ func TestHelloKeepaliveGoodbye(t *testing.T) {
 
 	defer events.Close()
 
-	ev := receiveEvent(t, events)
-	if expectedEvent := `{"event":"keep-alive"}` + "\n"; ev != expectedEvent {
-		t.Fatalf("expected %q, got %q", expectedEvent, ev)
+	expectEvent := func(t *testing.T, expected string) {
+		t.Helper()
+
+		ev := receiveEvent(t, events)
+		if expectedEvent := expected + "\n"; ev != expectedEvent {
+			t.Fatalf("expected %q, got %q", expectedEvent, ev)
+		}
 	}
+
+	expectEvent(t, `: Beginning of the event stream`)
+	expectEvent(t, `data: {"event":"keep-alive"}`)
 
 	testEventPayload := struct{ Test int }{Test: 42}
 	if err := handler.Send(clientID, "test", testEventPayload); err != nil {
 		t.Fatalf("error sending event: %s", err)
 	}
 
-	ev = receiveEvent(t, events)
-	if expectedEvent := `{"event":"test","payload":{"Test":42}}` + "\n"; ev != expectedEvent {
-		t.Fatalf("expected %q, got %q", expectedEvent, ev)
-	}
+	expectEvent(t, `data: {"event":"test","payload":{"Test":42}}`)
 
 	// 3. Receive message
 	resultChan := make(chan interface{}, 1)
@@ -73,7 +82,7 @@ func TestHelloKeepaliveGoodbye(t *testing.T) {
 	}()
 
 	testDataPayload := struct{ Hello string }{Hello: "World"}
-	if err := postData(baseURL, clientID.String(), testDataPayload); err != nil {
+	if err := postData(baseURL, clientID.String(), clientSecret.String(), testDataPayload); err != nil {
 		t.Fatalf("error sending data payload: %s", err)
 	}
 
@@ -92,8 +101,8 @@ func TestHelloKeepaliveGoodbye(t *testing.T) {
 	}
 }
 
-func postHello(baseURL, clientID string) (helloResult, error) {
-	helloCommand := fmt.Sprintf(`{"name": "hello", "clientID":"%s"}`, clientID)
+func postHello(baseURL, clientID, clientSecret string) (helloResult, error) {
+	helloCommand := fmt.Sprintf(`{"name": "hello", "clientID":"%s", "secret":"%s"}`, clientID, clientSecret)
 	res, err := http.Post(baseURL+"command", jsonContentType, strings.NewReader(helloCommand))
 	if err != nil {
 		return helloResult{}, fmt.Errorf("POST hello returned an error: %w", err)
@@ -135,23 +144,30 @@ func getEvents(baseURL, clientID string) (io.ReadCloser, error) {
 }
 
 func receiveEvent(t *testing.T, r io.Reader) string {
-	line, err := bufio.NewReader(r).ReadString('\n')
-	if err != nil {
-		t.Fatalf("error reading event: %s", err)
-	}
+	for {
+		line, err := bufio.NewReader(r).ReadString('\n')
+		if err != nil {
+			t.Fatalf("error reading event: %s", err)
+		}
 
-	return line
+		if line == "\n" {
+			continue
+		}
+
+		return line
+	}
 }
 
-func postData(baseURL, clientID string, data interface{}) error {
+func postData(baseURL, clientID, clientSecret string, data interface{}) error {
 	type clientDataCommand struct {
 		Name     string      `json:"name"`
 		ClientID string      `json:"clientId"`
+		Secret   string      `json:"secret"`
 		Payload  interface{} `json:"payload"`
 	}
 
 	var body bytes.Buffer
-	cmd := clientDataCommand{Name: dataCommandName, ClientID: clientID, Payload: data}
+	cmd := clientDataCommand{Name: dataCommandName, ClientID: clientID, Secret: clientSecret, Payload: data}
 	if err := json.NewEncoder(&body).Encode(cmd); err != nil {
 		return fmt.Errorf("error encoding data command: %w", err)
 	}
