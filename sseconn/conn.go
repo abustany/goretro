@@ -50,8 +50,8 @@ var (
 // Handler is a HTTP handler that manages bidirectional connections on top of
 // HTTP and SSE.
 //
-// The client to server messages are sent over regular HTTP requests, and the
-// server to client messages are dispatched via server sent events.
+// The client-to-server messages are sent over regular HTTP requests, and the
+// server-to-client messages are dispatched via server sent events.
 //
 // This handler handles two routes under a given prefix:
 // 1. POST /prefix/command for client sent messages
