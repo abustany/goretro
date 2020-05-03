@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Debug UI</title>
+<style type="text/css">
+body {
+    width: 100%;
+}
+
+#log {
+    width: 80%;
+    max-height: 20em;
+    overflow: auto;
+    font-family: monospace;
+}
+</style>
+    </head>
+    <body>
+        <div>
+            <input type="text" id="nickname">
+            <input type="button" id="identify" value="Set nickname" disabled/>
+        </div>
+        <div>
+            <input type="text" id="room-name">
+            <input type="button" id="create-room" value="Create room" disabled/>
+            <input type="button" id="join-room" value="Join room" disabled/>
+        </div>
+        <div id="log"></div>
+        <script src="main.js" type="text/javascript"></script>
+    </body>
+</html>
