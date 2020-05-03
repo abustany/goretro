@@ -370,7 +370,7 @@ func (h *Handler) eventsHandlerHTTP(w http.ResponseWriter, r *http.Request) {
 	closeNotifier := w.(http.CloseNotifier)
 	keepAliveTicker := time.NewTicker(keepAliveInterval)
 
-	w.Header().Add("Cache-Control", "no-cache")
+	w.Header().Add("Cache-Control", "no-cache, no-transform")
 	w.Header().Add("Content-Type", eventStreamContentType)
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, ": Beginning of the event stream\n\n")
