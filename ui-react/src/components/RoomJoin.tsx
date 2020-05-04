@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+import '../stylesheets/utils.scss'
+
 export default function RoomJoin({onCreate, onJoin}) {
   const [roomId, setRoomId] = useState("")
 
@@ -8,12 +10,19 @@ export default function RoomJoin({onCreate, onJoin}) {
     // TODO: Manage when Room doesn't exist
   }
 
-  return <>
-    <h2>Create new room</h2>
-    <button onClick={ onCreate } >Create</button>
+  return <div className="CenterForm VCenter">
+    <div>
+      <button onClick={ onCreate } >Create a new room</button>
 
-    <h2>Join existing room</h2>
-    <input type="text" onChange={(e) => setRoomId(e.target.value)} value={roomId} onKeyDown={(e) => { e.key === 'Enter' && handleJoin() }}/>
-    <button onClick={handleJoin}>Join</button>
-  </>
+      <h2 className="Separator">or</h2>
+      <input
+        type="text"
+        placeholder="Room ID"
+        onChange={(e) => setRoomId(e.target.value)}
+        value={roomId}
+        onKeyDown={(e) => { e.key === 'Enter' && handleJoin() }}
+      />
+      <button onClick={handleJoin}>Join existing Room</button>
+    </div>
+  </div>
 }

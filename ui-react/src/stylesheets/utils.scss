@@ -1,0 +1,24 @@
+.VCenter {
+  margin-top: 20vh;
+}
+
+.CenterForm {
+  text-align: center;
+
+  * {
+    margin: auto;
+  }
+
+  input, button {
+    display: block;
+    width: 20em;
+  }
+
+  input {
+    margin-bottom: 1em;
+  }
+
+  .Separator {
+    margin: 1em;
+  }
+}
