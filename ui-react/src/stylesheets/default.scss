@@ -1,4 +1,4 @@
-@import "stylesheets/config.scss";
+@import "./config.scss";
 
 // Inputs
 input, button, textarea {
@@ -20,4 +20,8 @@ button, input[type=submit] {
   &:active {
     background-color: $redAltColor;
   }
+}
+
+html {
+  font-family: $font;
 }

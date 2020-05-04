@@ -5,7 +5,8 @@ import { Key, States } from '../models/room'
 import * as Note from '../models/note'
 
 import RoomColumn from './RoomColumn'
-import './Room.css'
+import './Room.scss'
+import '../stylesheets/utils.scss'
 
 function restructureNotes(notes) {
   let res: Note.Note[] = [];
@@ -22,34 +23,39 @@ function restructureNotes(notes) {
 }
 
 export default function Room({room, isAdmin, notes, onNoteCreate, onStateIncrement}) {
-  const handleNoteCreation = (note) => { onNoteCreate(note) }
-  const actualNotes = room.state === Key.Reviewing ? restructureNotes(room.notes) : notes
-  const notesByMood = (mood) => actualNotes.filter((n) => n.mood === mood)
-  const editable = room.state === Key.Running
+  const isWaiting = room.state === Key.Waiting
+  const isRunning = room.state === Key.Running
+  const isReviewing = room.state === Key.Reviewing
 
-  return <div>
-    { room.state !== Key.Waiting && <div className="Room">
+  const handleNoteCreation = (note) => { onNoteCreate(note) }
+  const actualNotes = isReviewing ? restructureNotes(room.notes) : notes
+  const notesByMood = (mood) => actualNotes.filter((n) => n.mood === mood)
+  const editable = isRunning
+
+  return <div className="Room">
+    { !isWaiting && <div className="Room__columns">
       <RoomColumn mood={ Mood.Up }      notes={ notesByMood(Mood.Up) }      editable={editable} onNoteCreate={ handleNoteCreation }/>
       <RoomColumn mood={ Mood.Down }    notes={ notesByMood(Mood.Down) }    editable={editable} onNoteCreate={ handleNoteCreation }/>
       <RoomColumn mood={ Mood.Discuss } notes={ notesByMood(Mood.Discuss) } editable={editable} onNoteCreate={ handleNoteCreation }/>
     </div> }
 
-    <div>{ room.participants.map(p => p.name ).join(", ") }</div>
+    <div className={`centered-col-300 center-form ${isWaiting ? "vmargin-20" : "Room__footer"}`}>
+      <div>{ room.participants.map(p => p.name ).join(", ") }</div>
 
-    { isAdmin && room.state === Key.Waiting && <div>
-      <button onClick={onStateIncrement}>Start</button>
-    </div> }
+      { isAdmin && isWaiting && <div>
+        <button onClick={onStateIncrement}>Start</button>
+      </div> }
 
-    { isAdmin && room.state === Key.Running && <div>
-      <button onClick={onStateIncrement}>Close &amp; Review</button>
-    </div> }
+      { isAdmin && isRunning && <div>
+        <button onClick={onStateIncrement}>Close &amp; Review</button>
+      </div> }
 
-    <div>
-      { States[room.state].name }
+      <div>
+        { States[room.state].name }
+      </div>
+
+      <div>{ room.id }</div>
     </div>
-
-    <div>{ room.id }</div>
-
   </div>
 }
 

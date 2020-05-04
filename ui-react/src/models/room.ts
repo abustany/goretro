@@ -11,7 +11,7 @@ export interface State {
 
 export const Waiting: State = {
   key: Key.Waiting,
-  name: "Waiting",
+  name: "Waiting for people to join...",
 }
 
 export const Running: State = {
@@ -21,7 +21,7 @@ export const Running: State = {
 
 export const Reviewing: State = {
   key: Key.Reviewing,
-  name: "Reviewing",
+  name: "Finding action points",
 }
 
 export const States = {

@@ -1,0 +1,22 @@
+.Room {
+  padding: 0 0.5em;
+}
+
+.Room__columns {
+  display: flex;
+  justify-content: space-between;
+
+  width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .Room__columns {
+    display: block;
+    margin: auto;
+    max-width: 800px;
+  }
+}
+
+.Room__footer {
+  margin: 2em auto;
+}

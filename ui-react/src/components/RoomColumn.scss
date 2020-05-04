@@ -1,0 +1,27 @@
+@import "../stylesheets/config.scss";
+
+.RoomColumn {
+  width: 100%;
+  margin-top: 2em;
+}
+
+.RoomColumn__Notes {
+  background-color: $redWhiterColor;
+  padding: 1em;
+  margin: 0.75em;
+  border-radius: $radius;
+}
+
+.RoomColumn__Note {
+  background-color: $whiteWhiteColor;
+  width: 100%;
+  border-radius: $radius;
+  padding: 0.5em;
+  color: $darkColor;
+  text-align: justify;
+}
+
+.RoomColumn__Editor {
+  font-family: $font;
+  background-color: $whiteWhiteColor;
+}
