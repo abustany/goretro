@@ -53,8 +53,6 @@ export default function Room({room, isAdmin, notes, onNoteCreate, onStateIncreme
       <div>
         { States[room.state].name }
       </div>
-
-      <div>{ room.id }</div>
     </div>
   </div>
 }
