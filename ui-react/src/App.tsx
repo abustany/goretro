@@ -1,10 +1,11 @@
 import React, { useReducer, useEffect } from 'react';
-import { css, cx } from 'emotion'
 
 import Connection from './connection';
 import Login from './components/Login';
 import RoomJoin from './components/RoomJoin';
 import Room from './components/Room';
+
+import './App.scss'
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
@@ -14,22 +15,17 @@ export default function App() {
   }, [])
 
   return (
-    <div className={appCss}>
-      {state.connectionError && <h1>⚠ Connection Down</h1>}
+    <div className="App">
+      <header className="Header">
+        <h1>Goretro</h1>
+        <em>{ state.name ? <span>with {state.name}</span> : <span>Here comes a new challenger!</span> }</em>
+      </header>
 
-      <h1>Goretro</h1>
-
-      {state.name && <em>with {state.name}</em>}
 
       { mainComponent(state, dispatch) }
     </div>
   );
 }
-
-const appCss = css`
-  text-align: center;
-  height: 100%;
-`
 
 function mainComponent(state, dispatch) {
   if (!state.name) {

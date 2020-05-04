@@ -1,0 +1,23 @@
+@import "stylesheets/config.scss";
+
+// Inputs
+input, button, textarea {
+  padding: 0.4em;
+  font-size: 1em;
+
+  border: none;
+  border-radius: $radius;
+}
+
+// Buttons
+button, input[type=submit] {
+  background-color: $redColor;
+  color: $whiteColor;
+
+  &:hover {
+    background-color: $redAltColor;
+  }
+  &:active {
+    background-color: $redAltColor;
+  }
+}

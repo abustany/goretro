@@ -1,12 +1,23 @@
 import React, { useState } from 'react';
 
+import '../stylesheets/utils.scss'
+
 export default function Login({onNameSet}) {
   const [name, setName] = useState("");
 
-  return <>
-    <input type="text" onChange={(e) => setName(e.target.value)} value={name} onKeyDown={(e) => { e.key === 'Enter' && handleSetName(onNameSet, name) }}/>
-    <button onClick={() => handleSetName(onNameSet, name)}>Here I am!</button>
-  </>
+  return <div className="CenterForm VCenter">
+    <div>
+      <input
+        type="text"
+        placeholder="Nickname"
+        onChange={(e) => setName(e.target.value)}
+        value={name}
+        onKeyDown={(e) => { e.key === 'Enter' && handleSetName(onNameSet, name) }}
+      />
+
+      <button onClick={() => handleSetName(onNameSet, name)}>Let me in!</button>
+    </div>
+  </div>
 }
 
 function handleSetName(onNameSet, name) {
