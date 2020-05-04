@@ -92,6 +92,8 @@ async function connect(dispatch) {
         break
       case "current-state":
         dispatch({type: 'roomReceived', payload: message.payload})
+        // Change URL
+        window.history.replaceState(null, document.title, message.payload.id);
         break
       case "participant-added":
         dispatch({type: 'roomParticipantAdded', payload: message.payload})
@@ -111,7 +113,7 @@ async function connect(dispatch) {
 // State
 
 
-const d1 = {
+const real = {
   connection: null,
   connectionError: null,
   connected: false,
@@ -126,7 +128,7 @@ const d1 = {
   notes: [],
 }
 
-const d2 = {
+const debugRoom = {
   connection: null,
   connectionError: null,
   connected: false,
@@ -147,7 +149,7 @@ const d2 = {
   notes: [],
 }
 
-const initialState = d1
+const initialState = real
 
 function reducer(state, action) {
   console.log(`Reducing ${action.type} - ${action.payload}`)
