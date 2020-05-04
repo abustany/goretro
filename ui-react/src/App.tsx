@@ -21,7 +21,6 @@ export default function App() {
         { state.name ? <span>with <strong>{state.name}</strong></span> : <span>Here comes a new challenger!</span> }
       </header>
 
-
       { mainComponent(state, dispatch) }
     </div>
   );
@@ -54,7 +53,7 @@ function mainComponent(state, dispatch) {
 
 function handleSetName(state, dispatch, name) {
   dispatch({type: 'name', payload: name})
-  state.connection.identify(state.name).then(() => {
+  state.connection.identify(name).then(() => {
     dispatch({type: 'identified', payload: true})
   })
 }
@@ -111,7 +110,6 @@ async function connect(dispatch) {
 }
 
 // State
-
 
 const real = {
   connection: null,

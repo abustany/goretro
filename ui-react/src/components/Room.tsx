@@ -8,20 +8,6 @@ import RoomColumn from './RoomColumn'
 import './Room.scss'
 import '../stylesheets/utils.scss'
 
-function restructureNotes(notes) {
-  let res: Note.Note[] = [];
-  for (let k of Object.keys(notes)) {
-    for (let n of notes[k]) {
-      res.push({
-        id: n.ID,
-        mood: Mood.Moods[n.Mood],
-        content: n.Text,
-      })
-    }
-  }
-  return res
-}
-
 export default function Room({room, isAdmin, notes, onNoteCreate, onStateIncrement}) {
   const isWaiting = room.state === Key.Waiting
   const isRunning = room.state === Key.Running
@@ -57,3 +43,16 @@ export default function Room({room, isAdmin, notes, onNoteCreate, onStateIncreme
   </div>
 }
 
+function restructureNotes(notes) {
+  let res: Note.Note[] = [];
+  for (let k of Object.keys(notes)) {
+    for (let n of notes[k]) {
+      res.push({
+        id: n.ID,
+        mood: Mood.Moods[n.Mood],
+        content: n.Text,
+      })
+    }
+  }
+  return res
+}
