@@ -16,9 +16,9 @@ export default function App() {
 
   return (
     <div className="App">
-      <header className="Header">
-        <h1>Goretro</h1>
-        <em>{ state.name ? <span>with {state.name}</span> : <span>Here comes a new challenger!</span> }</em>
+      <header className="App__header">
+        <h1 className="App__title">Goretro</h1>
+        { state.name ? <span>with <strong>{state.name}</strong></span> : <span>Here comes a new challenger!</span> }
       </header>
 
 
@@ -33,7 +33,7 @@ function mainComponent(state, dispatch) {
   }
 
   if (state.roomLoading) {
-    return <div>Loading...</div>
+    return <div className="App__Loading center-form vmargin-20">Loading...</div>
   }
 
   if (state.room) {
@@ -110,7 +110,8 @@ async function connect(dispatch) {
 
 // State
 
-const initialState = {
+
+const d1 = {
   connection: null,
   connectionError: null,
   connected: false,
@@ -124,6 +125,29 @@ const initialState = {
 
   notes: [],
 }
+
+const d2 = {
+  connection: null,
+  connectionError: null,
+  connected: false,
+
+  name: "Charles",
+  identified: false,
+
+  roomLoading: false,
+  roomAdmin: false,
+  room: {
+    id: "ROOMID",
+    state: 2,
+    participants: [{
+      name: "Charles",
+    }]
+  },
+
+  notes: [],
+}
+
+const initialState = d1
 
 function reducer(state, action) {
   console.log(`Reducing ${action.type} - ${action.payload}`)

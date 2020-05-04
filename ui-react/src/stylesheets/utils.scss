@@ -1,24 +1,22 @@
-.VCenter {
+.centered-col-300 {
+  width: 300px;
+  margin: auto;
+}
+
+.vmargin-20 {
   margin-top: 20vh;
 }
 
-.CenterForm {
+.center-form {
   text-align: center;
 
   * {
     margin: auto;
-  }
-
-  input, button {
-    display: block;
-    width: 20em;
-  }
-
-  input {
     margin-bottom: 1em;
   }
 
-  .Separator {
-    margin: 1em;
+  input, button, textarea {
+    display: block;
+    width: 100%;
   }
 }

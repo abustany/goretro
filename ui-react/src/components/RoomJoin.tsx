@@ -10,11 +10,11 @@ export default function RoomJoin({onCreate, onJoin}) {
     // TODO: Manage when Room doesn't exist
   }
 
-  return <div className="CenterForm VCenter">
+  return <div className="centered-col-300 center-form vmargin-20">
     <div>
       <button onClick={ onCreate } >Create a new room</button>
 
-      <h2 className="Separator">or</h2>
+      <h2 className="center-form__section">or</h2>
       <input
         type="text"
         placeholder="Room ID"

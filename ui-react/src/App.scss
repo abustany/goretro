@@ -1,5 +1,4 @@
 @import "stylesheets/config.scss";
-@import "stylesheets/default.scss";
 
 .App {
   height: 100%;
@@ -9,6 +8,15 @@
   color: $whiteColor;
 }
 
-.Header {
+.App__header {
+  margin-top: 3em;
   text-align: center;
+}
+
+.App__title {
+  font-family: $fontTitle;
+}
+
+.App__Loading {
+  font-family: $fontTitle;
 }
