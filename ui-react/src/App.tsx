@@ -12,6 +12,7 @@ export default function App() {
 
   useEffect(() => {
     connect(dispatch)
+    retrieveRoomID(dispatch)
   }, [])
 
   return (
@@ -24,6 +25,15 @@ export default function App() {
       { mainComponent(state, dispatch) }
     </div>
   );
+}
+
+async function retrieveRoomID(dispatch) {
+  const roomId = window.location.pathname.substring(1);
+  if (!roomId) {
+    return
+  }
+  // TODO: Find other way.
+  dispatch({type: 'roomIdFromURL', payload: roomId})
 }
 
 function mainComponent(state, dispatch) {
@@ -48,6 +58,7 @@ function mainComponent(state, dispatch) {
   return <RoomJoin
     onCreate={() => { handleRoomCreate(state, dispatch) }}
     onJoin={(roomId) => {handleRoomJoin(state, dispatch, roomId)}}
+    roomIdFromURL={state.roomIdFromURL}
   />
 }
 
@@ -119,6 +130,7 @@ const real = {
   name: null,
   identified: false,
 
+  roomIdFromURL: null, // Used
   roomLoading: false,
   roomAdmin: false,
   room: null,
@@ -166,6 +178,8 @@ function reducer(state, action) {
     case 'identified':
       return {...state, identified: action.payload}
 
+    case 'roomIdFromURL':
+      return {...state, roomAdmin: false, roomIdFromURL: action.payload}
     case 'roomJoining':
       return {...state, roomLoading: true, roomAdmin: false}
     case 'roomCreating':

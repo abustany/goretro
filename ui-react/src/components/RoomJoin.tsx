@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 
 import '../stylesheets/utils.scss'
 
-export default function RoomJoin({onCreate, onJoin}) {
-  const [roomId, setRoomId] = useState("")
+export default function RoomJoin({onCreate, onJoin, roomIdFromURL}) {
+  const [roomId, setRoomId] = useState(roomIdFromURL)
 
   const handleJoin = function() {
     onJoin(roomId)
