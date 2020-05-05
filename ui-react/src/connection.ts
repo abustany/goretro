@@ -9,7 +9,7 @@ export default class Connection {
   eventBus = new EventBus()
 
   baseUrl: string = ''
-  connected = false
+  connected = false // EventSource
 
   async start(): Promise<void> {
     if (this.connected) {
@@ -21,14 +21,13 @@ export default class Connection {
     // console.log('Connection up, events URL: ' + res.eventsUrl)
 
     const eventSource = new EventSource(res.eventsUrl);
-
     eventSource.onerror = (err) => {
       console.error('Event source error', err);
     }
-
+    // maybe useless (just for logging)
     eventSource.onopen = () => {
+      // Lost connection but can ignore
       // console.log('Event source connected');
-
       this.connected = true;
       this.eventBus.$emit('connection-state-change', true);
     }

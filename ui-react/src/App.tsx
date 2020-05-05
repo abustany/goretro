@@ -11,8 +11,8 @@ export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
-    connect(dispatch)
-    retrieveRoomID(dispatch)
+    connect(state.connection, dispatch)
+    readRoomIdFromURL(dispatch)
   }, [])
 
   return (
@@ -27,7 +27,7 @@ export default function App() {
   );
 }
 
-async function retrieveRoomID(dispatch) {
+async function readRoomIdFromURL(dispatch) {
   const roomId = window.location.pathname.substring(1);
   if (!roomId) {
     return
@@ -38,7 +38,7 @@ async function retrieveRoomID(dispatch) {
 
 function mainComponent(state, dispatch) {
   if (!state.name) {
-    return <Login onNameSet={(name) => handleSetName(state, dispatch, name) }/>
+    return <Login onNameSet={(name) => handleNameSet(state, dispatch, name) }/>
   }
 
   if (state.roomLoading) {
@@ -62,7 +62,7 @@ function mainComponent(state, dispatch) {
   />
 }
 
-function handleSetName(state, dispatch, name) {
+function handleNameSet(state, dispatch, name) {
   dispatch({type: 'name', payload: name})
   state.connection.identify(name).then(() => {
     dispatch({type: 'identified', payload: true})
@@ -84,18 +84,16 @@ function handleRoomJoin(state, dispatch, roomId) {
 }
 
 function handleRoomCreate(state, dispatch) {
-  // TODO: roomCreating reducer could possibly be processed after roomReceived reducer.
+  // TODO: roomCreating could possibly be processed _after_ roomReceived.
   dispatch({type: 'roomCreating'})
   state.connection.createRoom()
 }
 
-async function connect(dispatch) {
-  const c = new Connection()
-  dispatch({type: 'connection', payload: c})
+// Connect the EventSource to the store.
+async function connect(connection, dispatch) {
+  connection.baseUrl = '/api';
 
-  c.baseUrl = '/api';
-
-  c.onMessage((message) => {
+  connection.onMessage((message) => {
     switch (message.event) {
       case "state-changed":
         dispatch({type: 'roomStateChanged', payload: message.payload})
@@ -111,11 +109,13 @@ async function connect(dispatch) {
     }
   });
 
-  c.onConnectionStateChange((connected) => {
+  connection.onConnectionStateChange((connected) => {
     dispatch({type: 'connectionStatus', payload: connected})
   });
 
-  c.start().catch((err) => {
+  connection.start().then(() => {
+    // Connected
+  }).catch((err) => {
     dispatch({type: 'connectionError', payload: err})
   })
 }
@@ -123,14 +123,14 @@ async function connect(dispatch) {
 // State
 
 const real = {
-  connection: null,
+  connection: new Connection(),
   connectionError: null,
   connected: false,
 
   name: null,
   identified: false,
 
-  roomIdFromURL: null, // Used
+  roomIdFromURL: null,
   roomLoading: false,
   roomAdmin: false,
   room: null,
@@ -139,7 +139,7 @@ const real = {
 }
 
 const debugRoom = {
-  connection: null,
+  connection: new Connection(),
   connectionError: null,
   connected: false,
 
@@ -166,8 +166,6 @@ function reducer(state, action) {
   // console.log(action.payload)
 
   switch (action.type) {
-    case 'connection':
-      return {...state, connection: action.payload}
     case 'connectionStatus':
       return {...state, connected: action.payload}
     case 'connectionError':
