@@ -12,7 +12,7 @@ export default function App() {
 
   useEffect(() => {
     connect(dispatch)
-    retrieveRoomID(dispatch)
+    readRoomIdFromURL(dispatch)
   }, [])
 
   return (
@@ -27,7 +27,7 @@ export default function App() {
   );
 }
 
-async function retrieveRoomID(dispatch) {
+async function readRoomIdFromURL(dispatch) {
   const roomId = window.location.pathname.substring(1);
   if (!roomId) {
     return
@@ -84,7 +84,7 @@ function handleRoomJoin(state, dispatch, roomId) {
 }
 
 function handleRoomCreate(state, dispatch) {
-  // TODO: roomCreating reducer could possibly be processed after roomReceived reducer.
+  // TODO: roomCreating could possibly be processed _after_ roomReceived.
   dispatch({type: 'roomCreating'})
   state.connection.createRoom()
 }
@@ -130,7 +130,7 @@ const real = {
   name: null,
   identified: false,
 
-  roomIdFromURL: null, // Used
+  roomIdFromURL: null,
   roomLoading: false,
   roomAdmin: false,
   room: null,
