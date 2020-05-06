@@ -73,20 +73,20 @@ function handleRoomStateIncrement(state) {
   state.connection.setRoomState(state.room.state + 1)
 }
 
-function handleNoteCreate(state, dispatch, note) {
-  dispatch({type: 'noteCreated', payload: note})
-  state.connection.saveNote(note)
-}
-
-function handleRoomJoin(state, dispatch, roomId) {
-  dispatch({type: 'roomJoining'})
-  state.connection.joinRoom(roomId)
-}
-
 function handleRoomCreate(state, dispatch) {
   // TODO: roomCreating could possibly be processed _after_ roomReceived.
   dispatch({type: 'roomCreating'})
   state.connection.createRoom()
+}
+
+function handleRoomJoin(state, dispatch, roomId) {
+  dispatch({type: 'roomJoining'})
+  state.connection.joinRoom(roomId) // No! Should be done as an Effect instead when joining. This allows URL joining.
+}
+
+function handleNoteCreate(state, dispatch, note) {
+  dispatch({type: 'noteCreated', payload: note})
+  state.connection.saveNote(note)
 }
 
 // Connect the EventSource to the store.
