@@ -153,9 +153,6 @@ const debugRoom = {
 const initialState = real
 
 function reducer(state, action) {
-  console.log(`Reducing ${action.type} - ${action.payload}`)
-  // console.log(action.payload)
-
   switch (action.type) {
     case 'connectionStatus':
       return {...state, connected: action.payload}
