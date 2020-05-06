@@ -1,6 +1,7 @@
 import React, { useReducer, useEffect } from 'react';
 
 import Connection from './connection';
+import Err from './components/Error';
 import Loading from './components/Loading';
 import Login from './components/Login';
 import Room from './components/Room';
@@ -28,7 +29,7 @@ export default function App() {
   return (
     <div className="App">
       <header className="App__header">
-        <h1 className="App__title">Goretro</h1>
+        <h1 className="retro-font">Goretro</h1>
         { state.name ? <span>with <strong>{state.name}</strong></span> : <span>Here comes a new challenger!</span> }
       </header>
 
@@ -38,7 +39,11 @@ export default function App() {
 }
 
 function mainComponent(state, dispatch) {
-  // TODO: If state.error
+  // TODO: Have a generic central component.
+
+  if (state.err) {
+    return <Err message={state.err}/>
+  }
 
   if (!state.name) {
     return <Login onNameSet={(name) => handleNameSet(state, dispatch, name) }/>
@@ -116,7 +121,7 @@ async function readRoomIdFromURL(dispatch) {
 
 const real = {
   connection: new Connection(),
-  connectionError: null,
+  error: null,
   connected: false,
 
   name: null,
@@ -131,7 +136,7 @@ const real = {
 
 const debugRoom = {
   connection: new Connection(),
-  connectionError: null,
+  err: null,
   connected: false,
 
   name: "Charles",
@@ -157,7 +162,7 @@ function reducer(state, action) {
     case 'connectionStatus':
       return {...state, connected: action.payload}
     case 'connectionError':
-      return {...state, connectionError: action.payload}
+      return {...state, err: action.payload}
 
     case 'name':
       return {...state, name: action.payload}
