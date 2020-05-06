@@ -15,6 +15,12 @@ export default function App() {
     readRoomIdFromURL(dispatch)
   }, [])
 
+  useEffect(() => {
+    if (state.identified && state.roomId) {
+      state.connection.joinRoom(state.roomId)
+    }
+  }, [state.identified, state.roomId])
+
   return (
     <div className="App">
       <header className="App__header">
@@ -32,7 +38,6 @@ async function readRoomIdFromURL(dispatch) {
   if (!roomId) {
     return
   }
-  // TODO: Find other way.
   dispatch({type: 'roomId', payload: roomId})
 }
 
@@ -57,7 +62,7 @@ function mainComponent(state, dispatch) {
 
   return <RoomJoin
     onCreate={() => { handleRoomCreate(state, dispatch) }}
-    onJoin={(roomId) => {handleRoomJoin(state, dispatch, roomId)}}
+    onJoin={(roomId) => {handleRoomJoin(dispatch, roomId)}}
     roomId={state.roomId}
   />
 }
@@ -65,7 +70,7 @@ function mainComponent(state, dispatch) {
 function handleNameSet(state, dispatch, name) {
   dispatch({type: 'name', payload: name})
   state.connection.identify(name).then(() => {
-    dispatch({type: 'identified', payload: true})
+    dispatch({type: 'identifyReceived', payload: true})
   })
 }
 
@@ -74,14 +79,13 @@ function handleRoomStateIncrement(state) {
 }
 
 function handleRoomCreate(state, dispatch) {
-  // TODO: roomCreating could possibly be processed _after_ roomReceived.
-  dispatch({type: 'roomCreating'})
+  // TODO: roomCreateRequest could possibly be processed _after_ roomReceive.
+  dispatch({type: 'roomCreateRequest'})
   state.connection.createRoom()
 }
 
-function handleRoomJoin(state, dispatch, roomId) {
-  dispatch({type: 'roomJoining'})
-  state.connection.joinRoom(roomId) // No! Should be done as an Effect instead when joining. This allows URL joining.
+function handleRoomJoin(dispatch, roomId) {
+  dispatch({type: 'roomJoinRequest', payload: roomId})
 }
 
 function handleNoteCreate(state, dispatch, note) {
@@ -99,12 +103,12 @@ async function connect(connection, dispatch) {
         dispatch({type: 'roomStateChanged', payload: message.payload})
         break
       case "current-state":
-        dispatch({type: 'roomReceived', payload: message.payload})
+        dispatch({type: 'roomReceive', payload: message.payload})
         // Change URL
         window.history.replaceState(null, document.title, message.payload.id);
         break
       case "participant-added":
-        dispatch({type: 'roomParticipantAdded', payload: message.payload})
+        dispatch({type: 'roomParticipantAdd', payload: message.payload})
         break
     }
   });
@@ -174,18 +178,18 @@ function reducer(state, action) {
 
     case 'name':
       return {...state, name: action.payload}
-    case 'identified':
+    case 'identifyReceived':
       return {...state, identified: action.payload}
 
     case 'roomId':
       return {...state, roomAdmin: false, roomId: action.payload}
-    case 'roomJoining':
-      return {...state, roomLoading: true, roomAdmin: false}
-    case 'roomCreating':
+    case 'roomJoinRequest':
+      return {...state, roomLoading: true, roomAdmin: false, roomId: action.payload}
+    case 'roomCreateRequest':
       return {...state, roomLoading: true, roomAdmin: true}
-    case 'roomReceived':
+    case 'roomReceive':
       return {...state, roomLoading: false, room: action.payload}
-    case 'roomParticipantAdded':
+    case 'roomParticipantAdd':
       return {
         ...state,
         room: {
