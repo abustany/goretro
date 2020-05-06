@@ -47,7 +47,7 @@ function mainComponent(state, dispatch) {
   }
 
   if (state.roomLoading) {
-    return <div className="App__Loading center-form vmargin-20">Loading...</div>
+    return <div className="App__Loading center-form vmargin-20pc">Loading...</div>
   }
 
   if (state.room) {

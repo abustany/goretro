@@ -25,7 +25,7 @@ export default function Room({room, isAdmin, notes, onNoteCreate, onStateIncreme
       <RoomColumn mood={ Mood.Discuss } notes={ notesByMood(Mood.Discuss) } editable={editable} onNoteCreate={ handleNoteCreation }/>
     </div> }
 
-    <div className={`centered-col-300 center-form ${isWaiting ? "vmargin-20" : "Room__footer"}`}>
+    <div className={`centered-col-300 center-form ${isWaiting ? "vmargin-20pc" : "Room__footer"}`}>
       <div>{ room.participants.map(p => p.name ).join(", ") }</div>
 
       { isAdmin && isWaiting && <div>

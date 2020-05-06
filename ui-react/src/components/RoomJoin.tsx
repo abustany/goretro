@@ -10,7 +10,7 @@ export default function RoomJoin({onCreate, onJoin, roomId}) {
     // TODO: Manage when Room doesn't exist
   }
 
-  return <div className="centered-col-300 center-form vmargin-20">
+  return <div className="centered-col-300 center-form vmargin-20pc">
     <div>
       <button onClick={ onCreate } >Create a new room</button>
 

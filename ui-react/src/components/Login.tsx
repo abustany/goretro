@@ -5,7 +5,7 @@ import '../stylesheets/utils.scss'
 export default function Login({onNameSet}) {
   const [name, setName] = useState("");
 
-  return <div className="centered-col-300 center-form vmargin-20">
+  return <div className="centered-col-300 center-form vmargin-20pc">
     <div>
       <input
         type="text"
