@@ -33,7 +33,7 @@ async function readRoomIdFromURL(dispatch) {
     return
   }
   // TODO: Find other way.
-  dispatch({type: 'roomIdFromURL', payload: roomId})
+  dispatch({type: 'roomId', payload: roomId})
 }
 
 function mainComponent(state, dispatch) {
@@ -58,7 +58,7 @@ function mainComponent(state, dispatch) {
   return <RoomJoin
     onCreate={() => { handleRoomCreate(state, dispatch) }}
     onJoin={(roomId) => {handleRoomJoin(state, dispatch, roomId)}}
-    roomIdFromURL={state.roomIdFromURL}
+    roomId={state.roomId}
   />
 }
 
@@ -130,7 +130,7 @@ const real = {
   name: null,
   identified: false,
 
-  roomIdFromURL: null,
+  roomId: null,
   roomLoading: false,
   roomAdmin: false,
   room: null,
@@ -146,6 +146,7 @@ const debugRoom = {
   name: "Charles",
   identified: false,
 
+  roomId: null,
   roomLoading: false,
   roomAdmin: false,
   room: {
@@ -176,8 +177,8 @@ function reducer(state, action) {
     case 'identified':
       return {...state, identified: action.payload}
 
-    case 'roomIdFromURL':
-      return {...state, roomAdmin: false, roomIdFromURL: action.payload}
+    case 'roomId':
+      return {...state, roomAdmin: false, roomId: action.payload}
     case 'roomJoining':
       return {...state, roomLoading: true, roomAdmin: false}
     case 'roomCreating':

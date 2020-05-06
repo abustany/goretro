@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 
 import '../stylesheets/utils.scss'
 
-export default function RoomJoin({onCreate, onJoin, roomIdFromURL}) {
-  const [roomId, setRoomId] = useState(roomIdFromURL)
+export default function RoomJoin({onCreate, onJoin, roomId}) {
+  const [innerRoomId, setInnerRoomId] = useState(roomId)
 
   const handleJoin = function() {
-    onJoin(roomId)
+    onJoin(innerRoomId)
     // TODO: Manage when Room doesn't exist
   }
 
@@ -18,8 +18,8 @@ export default function RoomJoin({onCreate, onJoin, roomIdFromURL}) {
       <input
         type="text"
         placeholder="Room ID"
-        onChange={(e) => setRoomId(e.target.value)}
-        value={roomId}
+        onChange={(e) => setInnerRoomId(e.target.value)}
+        value={innerRoomId}
         onKeyDown={(e) => { e.key === 'Enter' && handleJoin() }}
       />
       <button onClick={handleJoin}>Join existing Room</button>
