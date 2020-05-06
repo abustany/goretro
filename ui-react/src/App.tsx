@@ -1,8 +1,8 @@
 import React, { useReducer, useEffect } from 'react';
 
 import Connection from './connection';
+import Loading from './components/Loading';
 import Login from './components/Login';
-import RoomJoin from './components/RoomJoin';
 import Room from './components/Room';
 
 import './App.scss'
@@ -16,8 +16,12 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (state.identified && state.roomId) {
-      state.connection.joinRoom(state.roomId)
+    if (state.identified) {
+      if (state.roomId) {
+        state.connection.joinRoom(state.roomId)
+      } else {
+        state.connection.createRoom(state.roomId)
+      }
     }
   }, [state.identified, state.roomId])
 
@@ -33,37 +37,23 @@ export default function App() {
   );
 }
 
-async function readRoomIdFromURL(dispatch) {
-  const roomId = window.location.pathname.substring(1);
-  if (!roomId) {
-    return
-  }
-  dispatch({type: 'roomId', payload: roomId})
-}
-
 function mainComponent(state, dispatch) {
+  // TODO: If state.error
+
   if (!state.name) {
     return <Login onNameSet={(name) => handleNameSet(state, dispatch, name) }/>
   }
 
-  if (state.roomLoading) {
-    return <div className="App__Loading center-form vmargin-20pc">Loading...</div>
+  if (!state.room) {
+    return <Loading/>
   }
 
-  if (state.room) {
-    return <Room
-      room={state.room}
-      isAdmin={state.roomAdmin}
-      notes={state.notes}
-      onNoteCreate={(note) => { handleNoteCreate(state, dispatch, note) }}
-      onStateIncrement={() => { handleRoomStateIncrement(state) }}
-    />
-  }
-
-  return <RoomJoin
-    onCreate={() => { handleRoomCreate(state, dispatch) }}
-    onJoin={(roomId) => {handleRoomJoin(dispatch, roomId)}}
-    roomId={state.roomId}
+  return <Room
+    room={state.room}
+    isAdmin={state.roomAdmin}
+    notes={state.notes}
+    onNoteCreate={(note) => { handleNoteCreate(state, dispatch, note) }}
+    onStateIncrement={() => { handleRoomStateIncrement(state) }}
   />
 }
 
@@ -76,16 +66,6 @@ function handleNameSet(state, dispatch, name) {
 
 function handleRoomStateIncrement(state) {
   state.connection.setRoomState(state.room.state + 1)
-}
-
-function handleRoomCreate(state, dispatch) {
-  // TODO: roomCreateRequest could possibly be processed _after_ roomReceive.
-  dispatch({type: 'roomCreateRequest'})
-  state.connection.createRoom()
-}
-
-function handleRoomJoin(dispatch, roomId) {
-  dispatch({type: 'roomJoinRequest', payload: roomId})
 }
 
 function handleNoteCreate(state, dispatch, note) {
@@ -124,6 +104,14 @@ async function connect(connection, dispatch) {
   })
 }
 
+async function readRoomIdFromURL(dispatch) {
+  const roomId = window.location.pathname.substring(1);
+  if (!roomId) {
+    return
+  }
+  dispatch({type: 'roomId', payload: roomId})
+}
+
 // State
 
 const real = {
@@ -135,7 +123,6 @@ const real = {
   identified: false,
 
   roomId: null,
-  roomLoading: false,
   roomAdmin: false,
   room: null,
 
@@ -151,7 +138,6 @@ const debugRoom = {
   identified: false,
 
   roomId: null,
-  roomLoading: false,
   roomAdmin: false,
   room: {
     id: "ROOMID",
@@ -183,10 +169,6 @@ function reducer(state, action) {
 
     case 'roomId':
       return {...state, roomAdmin: false, roomId: action.payload}
-    case 'roomJoinRequest':
-      return {...state, roomLoading: true, roomAdmin: false, roomId: action.payload}
-    case 'roomCreateRequest':
-      return {...state, roomLoading: true, roomAdmin: true}
     case 'roomReceive':
       return {...state, roomLoading: false, room: action.payload}
     case 'roomParticipantAdd':
