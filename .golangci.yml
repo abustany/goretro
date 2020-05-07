@@ -1,0 +1,15 @@
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - gofmt
+    - goimports
+    - ineffassign
+    - misspell
+    - unconvert
+    - golint
+    - staticcheck
+
+linter-settings:
+  goimports:
+    local-prefixes: 'github.com/abustany/goretro/retro'
