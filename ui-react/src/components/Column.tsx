@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 
-import './RoomColumn.scss'
+import './Column.scss'
 import '../stylesheets/utils.scss'
 
-export default function RoomColumn({editable, mood, notes, participants, onNoteCreate}) {
+export default function Column({editable, mood, notes, participants, onNoteCreate}) {
   const [note, setNote] = useState("")
   const textArea = useRef<any>(null);
 
@@ -14,15 +14,15 @@ export default function RoomColumn({editable, mood, notes, participants, onNoteC
       ref={textArea}
       onChange={(e) => setNote(e.target.value) }
       value={note}
-      className="RoomColumn__Editor"
+      className="Column__Editor"
     />
     <button onClick={(e) => handleCreate(textArea, setNote, onNoteCreate, mood, note)}>Add</button>
   </div>
 
-  return <div className='RoomColumn center-form'>
+  return <div className='Column center-form'>
     <h2>{mood.icon}</h2>
 
-    <div className='RoomColumn__Notes'>
+    <div className='Column__Notes'>
       { noteElements }
 
       { editable && editor }
@@ -31,11 +31,11 @@ export default function RoomColumn({editable, mood, notes, participants, onNoteC
 }
 
 function noteComponent(note, editable, participants) {
-  return <div className='RoomColumn__Note' key={note.id}>
+  return <div className='Column__Note' key={note.id}>
     <p>
       {note.content}
     </p>
-    {!editable && <em className="RoomColumn__NoteAuthor">
+    {!editable && <em className="Column__NoteAuthor">
       {participants.get(note.authorId).name}
     </em>}
   </div>

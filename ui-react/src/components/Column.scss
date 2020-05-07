@@ -1,18 +1,18 @@
 @import "../stylesheets/config.scss";
 
-.RoomColumn {
+.Column {
   width: 100%;
   margin-top: 2em;
 }
 
-.RoomColumn__Notes {
+.Column__Notes {
   background-color: $redWhiterColor;
   padding: 1em;
   margin: 0.75em;
   border-radius: $radius;
 }
 
-.RoomColumn__Note {
+.Column__Note {
   background-color: $whiteWhiteColor;
   width: 100%;
 
@@ -24,16 +24,16 @@
   position: relative;
 }
 
-.RoomColumn__Note > p {
+.Column__Note > p {
   margin-bottom: 0;
 }
 
-.RoomColumn__Editor {
+.Column__Editor {
   font-family: $font;
   background-color: $whiteWhiteColor;
 }
 
-.RoomColumn__NoteAuthor {
+.Column__NoteAuthor {
   position: absolute;
   bottom: -0.3em;
   right: -0.3em;

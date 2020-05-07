@@ -4,7 +4,7 @@ import * as Mood from '../models/mood'
 import { Key, States } from '../models/room'
 import * as Note from '../models/note'
 
-import RoomColumn from './RoomColumn'
+import Column from './Column'
 import './Room.scss'
 import '../stylesheets/utils.scss'
 
@@ -24,9 +24,9 @@ export default function Room({room, isAdmin, notes, onNoteCreate, onStateTransit
   const handleNoteCreation = (note) => { onNoteCreate(note) }
   return <div className="Room">
     { !isWaiting && <div className="Room__columns">
-      <RoomColumn mood={ Mood.Up }      editable={editable} participants={participants} notes={ notesByMood(Mood.Up) }      onNoteCreate={ handleNoteCreation }/>
-      <RoomColumn mood={ Mood.Down }    editable={editable} participants={participants} notes={ notesByMood(Mood.Down) }    onNoteCreate={ handleNoteCreation }/>
-      <RoomColumn mood={ Mood.Discuss } editable={editable} participants={participants} notes={ notesByMood(Mood.Discuss) } onNoteCreate={ handleNoteCreation }/>
+      <Column mood={ Mood.Up }      editable={editable} participants={participants} notes={ notesByMood(Mood.Up) }      onNoteCreate={ handleNoteCreation }/>
+      <Column mood={ Mood.Down }    editable={editable} participants={participants} notes={ notesByMood(Mood.Down) }    onNoteCreate={ handleNoteCreation }/>
+      <Column mood={ Mood.Discuss } editable={editable} participants={participants} notes={ notesByMood(Mood.Discuss) } onNoteCreate={ handleNoteCreation }/>
     </div> }
 
     <div className={`centered-col-300 center-form ${isWaiting ? "vmargin-20pc" : "Room__footer"}`}>
