@@ -61,7 +61,7 @@ function mainComponent(state, dispatch) {
     isAdmin={state.roomAdmin}
     notes={state.notes}
     onNoteCreate={(note) => { handleNoteCreate(state, dispatch, note) }}
-    onStateIncrement={() => { handleRoomStateIncrement(state) }}
+    onStateTransition={() => { handleRoomStateIncrement(state) }}
   />
 }
 

@@ -8,7 +8,7 @@ import RoomColumn from './RoomColumn'
 import './Room.scss'
 import '../stylesheets/utils.scss'
 
-export default function Room({room, isAdmin, notes, onNoteCreate, onStateIncrement}) {
+export default function Room({room, isAdmin, notes, onNoteCreate, onStateTransition}) {
   const isWaiting = room.state === Key.Waiting
   const isRunning = room.state === Key.Running
   const isReviewing = room.state === Key.Reviewing
@@ -29,11 +29,11 @@ export default function Room({room, isAdmin, notes, onNoteCreate, onStateIncreme
       <div>{ room.participants.map(p => p.name ).join(", ") }</div>
 
       { isAdmin && isWaiting && <div>
-        <button onClick={onStateIncrement}>Start</button>
+        <button onClick={onStateTransition}>Start</button>
       </div> }
 
       { isAdmin && isRunning && <div>
-        <button onClick={onStateIncrement}>Close &amp; Review</button>
+        <button onClick={onStateTransition}>Close &amp; Review</button>
       </div> }
 
       <div>
