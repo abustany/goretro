@@ -1,0 +1,39 @@
+name: CI
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup cache
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.14.2'
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+
+      - name: Run backend tests
+        run: go test ./...
+
+      - name: Build backend binary
+        run: go build ./cmd/...
+
+      - name: Build UI
+        run: cd ui-react && yarn && yarn build
