@@ -93,7 +93,7 @@ async function connect(connection, dispatch) {
       case "current-state":
         dispatch({type: 'roomReceive', payload: message.payload})
         // Change URL
-        window.history.replaceState(null, document.title, message.payload.id);
+        window.history.replaceState(null, document.title, `/?roomId=${message.payload.id}`);
         break
       case "participant-added":
         dispatch({type: 'roomParticipantAdd', payload: message.payload})
@@ -113,7 +113,8 @@ async function connect(connection, dispatch) {
 }
 
 async function readRoomIdFromURL(dispatch) {
-  const roomId = window.location.pathname.substring(1);
+  const roomId = (new URL(window.location.toString())).searchParams.get('roomId')
+  console.log(`roomId: ${roomId}`)
   if (!roomId) {
     return
   }
