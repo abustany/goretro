@@ -1,6 +1,5 @@
 import React, { useReducer, useEffect } from 'react';
 
-import Connection from './connection';
 import Err from './components/Error';
 import Loading from './components/Loading';
 import Login from './components/Login';
@@ -11,20 +10,20 @@ import './App.scss'
 // - If the room doesn't exist.
 // - Bug when creating the room.
 
-export default function App() {
+export default function App(props) {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
-    connect(state.connection, dispatch)
+    connect(props.connection, dispatch)
     readRoomIdFromURL(dispatch)
   }, [])
 
   useEffect(() => {
     if (state.identified) {
       if (state.roomId) {
-        state.connection.joinRoom(state.roomId)
+        props.connection.joinRoom(state.roomId)
       } else {
-        state.connection.createRoom(state.roomId)
+        props.connection.createRoom(state.roomId)
       }
     }
   }, [state.identified, state.roomId])
@@ -36,12 +35,12 @@ export default function App() {
         { state.name ? <span>with <strong>{state.name}</strong></span> : <span>Here comes a new challenger!</span> }
       </header>
 
-      { mainComponent(state, dispatch) }
+      { mainComponent(props.connection, state, dispatch) }
     </div>
   );
 }
 
-function mainComponent(state, dispatch) {
+function mainComponent(connection, state, dispatch) {
   // TODO: Have a generic central component.
 
   if (state.err) {
@@ -49,7 +48,7 @@ function mainComponent(state, dispatch) {
   }
 
   if (!state.name) {
-    return <Login onNameSet={(name) => handleNameSet(state, dispatch, name) }/>
+    return <Login onNameSet={(name) => handleNameSet(connection, state, dispatch, name) }/>
   }
 
   if (!state.room) {
@@ -60,31 +59,29 @@ function mainComponent(state, dispatch) {
     room={state.room}
     isAdmin={state.roomAdmin}
     notes={state.notes}
-    onNoteCreate={(note) => { handleNoteCreate(state, dispatch, note) }}
-    onStateTransition={() => { handleRoomStateIncrement(state) }}
+    onNoteCreate={(note) => { handleNoteCreate(connection, state, dispatch, note) }}
+    onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
   />
 }
 
-function handleNameSet(state, dispatch, name) {
+function handleNameSet(connection, state, dispatch, name) {
   dispatch({type: 'name', payload: name})
-  state.connection.identify(name).then(() => {
+  connection.identify(name).then(() => {
     dispatch({type: 'identifyReceived', payload: true})
   })
 }
 
-function handleRoomStateIncrement(state) {
-  state.connection.setRoomState(state.room.state + 1)
+function handleRoomStateIncrement(connection, state) {
+  connection.setRoomState(state.room.state + 1)
 }
 
-function handleNoteCreate(state, dispatch, note) {
+function handleNoteCreate(connection, state, dispatch, note) {
   dispatch({type: 'noteCreated', payload: note})
-  state.connection.saveNote(note)
+  connection.saveNote(note)
 }
 
 // Connect the EventSource to the store.
 async function connect(connection, dispatch) {
-  connection.baseUrl = '/api';
-
   connection.onMessage((message) => {
     switch (message.event) {
       case "state-changed":
@@ -124,7 +121,6 @@ async function readRoomIdFromURL(dispatch) {
 // State
 
 const initialState = {
-  connection: new Connection(),
   error: null,
   connected: false,
 

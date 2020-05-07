@@ -2,12 +2,17 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import * as serviceWorker from './serviceWorker';
 
+import { Connection, generateClientId, generateSecret } from './connection';
 import './index.scss';
 import App from './App';
 
+
+// TODO(abustany): Persist the clientId and secret across reloads
+const connection = new Connection('/api', generateClientId(), generateSecret());
+
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <App connection={connection}/>
   </React.StrictMode>,
   document.getElementById('root')
 );

@@ -3,13 +3,20 @@ import { EventBus } from './event_bus';
 const CLIENT_ID_LEN = 16;
 const SECRET_LEN = 64;
 
-export default class Connection {
-  clientId = randomID(CLIENT_ID_LEN)
-  secret = randomID(SECRET_LEN)
+export class Connection {
+  baseUrl: string
+  clientId: string
+  secret: string
+
   eventBus = new EventBus()
 
-  baseUrl: string = ''
   connected = false // EventSource
+
+  constructor(baseUrl: string, clientId: string, secret: string) {
+    this.baseUrl = baseUrl;
+    this.clientId = clientId;
+    this.secret = secret;
+  }
 
   async start(): Promise<void> {
     if (this.connected) {
@@ -91,6 +98,14 @@ function randomID(length: number) {
   const data = new Uint8Array(length);
   window.crypto.getRandomValues(data);
   return btoa(String.fromCharCode.apply(null, data as unknown as number[])).replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+export function generateClientId(): string {
+  return randomID(CLIENT_ID_LEN);
+}
+
+export function generateSecret(): string {
+  return randomID(SECRET_LEN);
 }
 
 async function rawCommand<T>(baseUrl: string, command: unknown): Promise<T> {
