@@ -30,7 +30,7 @@ func main() {
 		log.Fatalf("error getting current directory: %s", err)
 	}
 
-	mux.Handle("/", http.FileServer(http.Dir(path.Join(wd, "debug-ui"))))
+	mux.Handle("/", http.FileServer(http.Dir(path.Join(wd, "ui-react/build"))))
 
 	log.Printf("Starting server on %s", *listenAddress)
 	http.ListenAndServe(*listenAddress, loggingHandler(mux))
