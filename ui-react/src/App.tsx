@@ -16,7 +16,7 @@ export default function App() {
 
   useEffect(() => {
     connect(state.connection, dispatch)
-    readRoomIdFromURL(dispatch)
+    //readRoomIdFromURL(dispatch)
   }, [])
 
   useEffect(() => {
