@@ -36,4 +36,4 @@ jobs:
         run: go build ./cmd/...
 
       - name: Build UI
-        run: cd ui-react && yarn && yarn build
+        run: cd ui && yarn && yarn build
