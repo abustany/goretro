@@ -8,6 +8,9 @@ import Room from './components/Room';
 
 import './App.scss'
 
+// - If the room doesn't exist.
+// - Bug when creating the room.
+
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
 
@@ -114,12 +117,12 @@ async function readRoomIdFromURL(dispatch) {
   if (!roomId) {
     return
   }
-  dispatch({type: 'roomId', payload: roomId})
+  dispatch({type: 'roomIdSetFromURL', payload: roomId})
 }
 
 // State
 
-const real = {
+const initialState = {
   connection: new Connection(),
   error: null,
   connected: false,
@@ -128,34 +131,11 @@ const real = {
   identified: false,
 
   roomId: null,
-  roomAdmin: false,
+  roomAdmin: true,
   room: null,
 
   notes: [],
 }
-
-const debugRoom = {
-  connection: new Connection(),
-  err: null,
-  connected: false,
-
-  name: "Charles",
-  identified: false,
-
-  roomId: null,
-  roomAdmin: false,
-  room: {
-    id: "ROOMID",
-    state: 2,
-    participants: [{
-      name: "Charles",
-    }]
-  },
-
-  notes: [],
-}
-
-const initialState = real
 
 function reducer(state, action) {
   switch (action.type) {
@@ -169,7 +149,7 @@ function reducer(state, action) {
     case 'identifyReceived':
       return {...state, identified: action.payload}
 
-    case 'roomId':
+    case 'roomIdSetFromURL':
       return {...state, roomAdmin: false, roomId: action.payload}
     case 'roomReceive':
       return {...state, roomLoading: false, room: action.payload}
