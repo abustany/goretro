@@ -16,7 +16,7 @@ export default function App() {
 
   useEffect(() => {
     connect(state.connection, dispatch)
-    //readRoomIdFromURL(dispatch)
+    readRoomIdFromURL(dispatch)
   }, [])
 
   useEffect(() => {
@@ -136,6 +136,29 @@ const initialState = {
 
   notes: [],
 }
+
+// const initialState = {
+//   connection: new Connection(),
+//   error: null,
+//   connected: false,
+
+//   name: "Charles",
+//   identified: false,
+
+//   roomId: "nullasdfs",
+//   roomAdmin: true,
+//   room: {
+//     state: 2,
+//     participants: [
+//       {
+//         id: 'ID',
+//         name: 'Charles'
+//       }
+//     ]
+//   },
+
+//   notes: [],
+// }
 
 function reducer(state, action) {
   switch (action.type) {
