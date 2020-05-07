@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 
 import NoteEditor from './NoteEditor'
 import Note from './Note'
