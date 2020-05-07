@@ -1,15 +1,20 @@
-import { EventBus } from './event_bus';
 import { Mood, RoomState } from './types';
 
 const CLIENT_ID_LEN = 16;
 const SECRET_LEN = 64;
+
+type ConnectionStateChangeCallback = (connected: boolean) => void;
+
+type Message = {name: string} & Record<string, any>
+type MessageCallback = (message: Message) => void;
 
 export class Connection {
   baseUrl: string
   clientId: string
   secret: string
 
-  eventBus = new EventBus()
+  connectionStateChangeListeners: ConnectionStateChangeCallback[] = [];
+  messageListeners: MessageCallback[] = [];
 
   connected = false // EventSource
 
@@ -37,7 +42,7 @@ export class Connection {
       // Lost connection but can ignore
       // console.log('Event source connected');
       this.connected = true;
-      this.eventBus.$emit('connection-state-change', true);
+      this.connectionStateChangeListeners.forEach(x => x(true));
     }
 
     eventSource.onmessage = (evt) => {
@@ -50,16 +55,16 @@ export class Connection {
         return;
       }
 
-      this.eventBus.$emit('message', parsed);
+      this.messageListeners.forEach(x => x(parsed));
     }
   }
 
   onConnectionStateChange(callback: (connected: boolean) => void) {
-    this.eventBus.$on('connection-state-change', callback);
+    this.connectionStateChangeListeners.push(callback);
   }
 
   onMessage(callback: (msg: Message) => void) {
-    this.eventBus.$on('message', callback);
+    this.messageListeners.push(callback);
   }
 
   // API
@@ -132,5 +137,3 @@ async function rawCommand<T>(baseUrl: string, command: unknown): Promise<T> {
 interface HelloResponse {
   eventsUrl: string;
 }
-
-type Message = {name: string} & Record<string, any>
