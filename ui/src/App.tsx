@@ -18,7 +18,7 @@ export default function App(props: {connection: Connection}) {
   useEffect(() => {
     connect(props.connection, dispatch)
     readRoomIdFromURL(dispatch)
-  }, [])
+  }, [props.connection])
 
   useEffect(() => {
     if (state.identified) {
@@ -28,7 +28,7 @@ export default function App(props: {connection: Connection}) {
         props.connection.createRoom("This room has no name :-(") // TODO(abustany): What do we do for the room name?
       }
     }
-  }, [state.identified, state.roomId])
+  }, [state.identified, state.roomId, props.connection])
 
   return (
     <div className="App">
