@@ -12,12 +12,12 @@ export default function Room({room, isAdmin, notes, onNoteCreate, onStateIncreme
   const isWaiting = room.state === Key.Waiting
   const isRunning = room.state === Key.Running
   const isReviewing = room.state === Key.Reviewing
-
-  const handleNoteCreation = (note) => { onNoteCreate(note) }
-  const actualNotes = isReviewing ? restructureNotes(room.notes) : notes
-  const notesByMood = (mood) => actualNotes.filter((n) => n.mood === mood)
   const editable = isRunning
 
+  const actualNotes = isReviewing ? restructureNotes(room.notes) : notes
+  const notesByMood = (mood) => actualNotes.filter((n) => n.mood === mood)
+
+  const handleNoteCreation = (note) => { onNoteCreate(note) }
   return <div className="Room">
     { !isWaiting && <div className="Room__columns">
       <RoomColumn mood={ Mood.Up }      notes={ notesByMood(Mood.Up) }      editable={editable} onNoteCreate={ handleNoteCreation }/>
