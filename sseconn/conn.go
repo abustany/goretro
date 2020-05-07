@@ -367,7 +367,6 @@ func (h *Handler) eventsHandlerHTTP(w http.ResponseWriter, r *http.Request) {
 
 	encoder := json.NewEncoder(w)
 	flusher := w.(http.Flusher)
-	closeNotifier := w.(http.CloseNotifier)
 	keepAliveTicker := time.NewTicker(keepAliveInterval)
 
 	w.Header().Add("Cache-Control", "no-cache, no-transform")
@@ -388,7 +387,7 @@ MainLoop:
 			message = ev
 		case <-keepAliveTicker.C:
 			message = eventData{Event: keepAliveEventName}
-		case <-closeNotifier.CloseNotify():
+		case <-r.Context().Done():
 			// connection has been closed
 			h.closeConnection(clientID)
 			break MainLoop

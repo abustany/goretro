@@ -65,16 +65,9 @@ func (s *spyingResponseWriter) Write(data []byte) (int, error) {
 
 	return s.ResponseWriter.Write(data)
 }
+
 func (s *spyingResponseWriter) Flush() {
 	if flusher, ok := s.ResponseWriter.(http.Flusher); ok {
 		flusher.Flush()
 	}
-}
-
-func (s *spyingResponseWriter) CloseNotify() <-chan bool {
-	if notifier, ok := s.ResponseWriter.(http.CloseNotifier); ok {
-		return notifier.CloseNotify()
-	}
-
-	return make(<-chan bool)
 }
