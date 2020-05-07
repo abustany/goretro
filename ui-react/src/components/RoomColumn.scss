@@ -15,13 +15,34 @@
 .RoomColumn__Note {
   background-color: $whiteWhiteColor;
   width: 100%;
-  border-radius: $radius;
+
   padding: 0.5em;
+  border-radius: $radius;
   color: $darkColor;
   text-align: justify;
+
+  position: relative;
+}
+
+.RoomColumn__Note > p {
+  margin-bottom: 0;
 }
 
 .RoomColumn__Editor {
   font-family: $font;
   background-color: $whiteWhiteColor;
+}
+
+.RoomColumn__NoteAuthor {
+  position: absolute;
+  bottom: -0.3em;
+  right: -0.3em;
+
+  padding: 0.2em 0.3em;
+  color: $whiteColor;
+
+  background-color: $redColor;
+  border-radius: $radius;
+
+  margin-bottom: 0;
 }

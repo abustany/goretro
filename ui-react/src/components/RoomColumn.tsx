@@ -1,12 +1,13 @@
 import React, { useState, useRef } from 'react';
 
 import './RoomColumn.scss'
+import '../stylesheets/utils.scss'
 
 export default function RoomColumn({editable, mood, notes, onNoteCreate}) {
   const [note, setNote] = useState("")
   const textArea = useRef<any>(null);
 
-  const noteDivs = notes.map((n) => <div className='RoomColumn__Note' key={n.id}>{n.content}</div>)
+  const noteElements = notes.map((n) => buildNote(n, editable))
 
   const editor = <div>
     <textarea
@@ -22,10 +23,21 @@ export default function RoomColumn({editable, mood, notes, onNoteCreate}) {
     <h2>{mood.icon}</h2>
 
     <div className='RoomColumn__Notes'>
-      { noteDivs }
+      { noteElements }
 
       { editable && editor }
     </div>
+  </div>
+}
+
+function buildNote(note, editable) {
+  return <div className='RoomColumn__Note' key={note.id}>
+    <p>
+      {note.content}
+    </p>
+    {!editable && <em className="RoomColumn__NoteAuthor">
+      Author
+    </em>}
   </div>
 }
 
