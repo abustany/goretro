@@ -1,0 +1,31 @@
+@import "../stylesheets/config.scss";
+
+.Note {
+  background-color: $whiteWhiteColor;
+  width: 100%;
+
+  padding: 0.5em;
+  border-radius: $radius;
+  color: $darkColor;
+  text-align: justify;
+
+  position: relative;
+}
+
+.Note > p {
+  margin-bottom: 0;
+}
+
+.Note__Author {
+  position: absolute;
+  bottom: -0.3em;
+  right: -0.3em;
+
+  padding: 0.2em 0.3em;
+  color: $whiteColor;
+
+  background-color: $redColor;
+  border-radius: $radius;
+
+  margin-bottom: 0;
+}

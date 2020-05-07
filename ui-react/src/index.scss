@@ -1,0 +1,11 @@
+@import "stylesheets/default.scss";
+@import "stylesheets/reset.scss";
+
+/* React */
+
+#root {
+  height: 100%;
+
+  /* Make sure children margin are contained */
+  overflow-y: hidden;
+}

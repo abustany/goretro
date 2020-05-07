@@ -4,8 +4,6 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"os"
-	"path"
 	"time"
 
 	"github.com/abustany/goretro/retro"
@@ -16,6 +14,8 @@ const apiPrefix = "/api/"
 
 func main() {
 	listenAddress := flag.String("listen", "127.0.0.1:1407", "address on which to listen")
+	uiDir := flag.String("ui", "", "directory with the UI files. If unset, do no serve UI files.")
+	flag.Parse()
 
 	mux := http.NewServeMux()
 
@@ -25,12 +25,10 @@ func main() {
 	// Starts the listening on new connections
 	retro.NewManager(apiHandler)
 
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("error getting current directory: %s", err)
+	if *uiDir != "" {
+		log.Printf("Serving UI files from %s", *uiDir)
+		mux.Handle("/", http.FileServer(http.Dir(*uiDir)))
 	}
-
-	mux.Handle("/", http.FileServer(http.Dir(path.Join(wd, "debug-ui"))))
 
 	log.Printf("Starting server on %s", *listenAddress)
 	http.ListenAndServe(*listenAddress, loggingHandler(mux))

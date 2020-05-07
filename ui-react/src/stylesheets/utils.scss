@@ -1,0 +1,28 @@
+@import "./config.scss";
+
+.centered-col-300 {
+  width: 300px;
+  margin: auto;
+}
+
+.vmargin-20pc {
+  margin-top: 20vh;
+}
+
+.center-form {
+  text-align: center;
+
+  * {
+    margin: auto;
+    margin-bottom: 1em;
+  }
+
+  input, button, textarea {
+    display: block;
+    width: 100%;
+  }
+}
+
+.retro-font {
+  font-family: $fontTitle;
+}
