@@ -11,33 +11,3 @@
   margin: 0.75em;
   border-radius: $radius;
 }
-
-.Column__Note {
-  background-color: $whiteWhiteColor;
-  width: 100%;
-
-  padding: 0.5em;
-  border-radius: $radius;
-  color: $darkColor;
-  text-align: justify;
-
-  position: relative;
-}
-
-.Column__Note > p {
-  margin-bottom: 0;
-}
-
-.Column__NoteAuthor {
-  position: absolute;
-  bottom: -0.3em;
-  right: -0.3em;
-
-  padding: 0.2em 0.3em;
-  color: $whiteColor;
-
-  background-color: $redColor;
-  border-radius: $radius;
-
-  margin-bottom: 0;
-}

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 
 import NoteEditor from './NoteEditor'
+import Note from './Note'
 import './Column.scss'
 import '../stylesheets/utils.scss'
 
@@ -13,7 +14,7 @@ export default function Column({editable, mood, notes, participants, onNoteCreat
     })
   }
 
-  const notesComponent = notes.map((n) => noteComponent(n, editable, participants))
+  const notesComponent = notes.map((n) => <Note note={n} showAuthor={!editable} participants={participants}/>)
 
   return <div className='Column center-form'>
     <h2>{mood.icon}</h2>
@@ -25,16 +26,5 @@ export default function Column({editable, mood, notes, participants, onNoteCreat
         onNoteCreate={handleNoteCreate}
       />}
     </div>
-  </div>
-}
-
-function noteComponent(note, editable, participants) {
-  return <div className='Column__Note' key={note.id}>
-    <p>
-      {note.content}
-    </p>
-    {!editable && <em className="Column__NoteAuthor">
-      {participants.get(note.authorId).name}
-    </em>}
   </div>
 }

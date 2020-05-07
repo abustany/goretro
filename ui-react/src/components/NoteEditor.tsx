@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 
-import '../stylesheets/utils.scss'
 import './NoteEditor.scss'
 
 export default function NoteEditor({onNoteCreate}) {
