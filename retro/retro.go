@@ -28,10 +28,10 @@ type Participant struct {
 }
 
 type Note struct {
-	ID       uint
-	AuthorID sseconn.ClientID
-	Text     string
-	Mood     Mood
+	ID       uint             `json:"id"`
+	AuthorID sseconn.ClientID `json:"authorId"`
+	Text     string           `json:"text"`
+	Mood     Mood             `json:"mood"`
 }
 
 type Retro struct {

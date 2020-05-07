@@ -1,4 +1,5 @@
 import { EventBus } from './event_bus';
+import { Mood, RoomState } from './types';
 
 const CLIENT_ID_LEN = 16;
 const SECRET_LEN = 64;
@@ -67,20 +68,20 @@ export class Connection {
     return this.dataCommand({name: 'identify', nickname: nickname})
   }
 
-  async createRoom() {
-    return this.dataCommand({name: 'create-room', roomName: "My Room"})
+  async createRoom(name: string) {
+    return this.dataCommand({name: 'create-room', roomName: name})
   }
 
-  async joinRoom(roomId) {
+  async joinRoom(roomId: string) {
     return this.dataCommand({name: 'join-room', roomId: roomId})
   }
 
-  async setRoomState(state) {
+  async setRoomState(state: RoomState) {
     return this.dataCommand({name: 'set-state', state: state})
   }
 
-  async saveNote(note) {
-    return this.dataCommand({name: 'save-note', noteId: note.id, text: note.content, mood: note.mood.key})
+  async saveNote(noteId: number, text: string, mood: Mood) {
+    return this.dataCommand({name: 'save-note', noteId, text, mood})
   }
 
   // END OF API

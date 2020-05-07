@@ -2,8 +2,16 @@ import React, { useState } from 'react';
 
 import '../stylesheets/utils.scss'
 
-export default function Login({onNameSet}) {
+interface LoginProps {
+  onNameSet: (name: string) => void;
+}
+
+export default function Login({onNameSet}: LoginProps) {
   const [name, setName] = useState("");
+
+  const handleSetName = () => {
+    if (name) onNameSet(name);
+  }
 
   return <div className="centered-col-300 center-form vmargin-20pc">
     <div>
@@ -12,14 +20,10 @@ export default function Login({onNameSet}) {
         placeholder="Nickname"
         onChange={(e) => setName(e.target.value)}
         value={name}
-        onKeyDown={(e) => { e.key === 'Enter' && handleSetName(onNameSet, name) }}
+        onKeyDown={(e) => { e.key === 'Enter' && handleSetName() }}
       />
 
-      <button onClick={() => handleSetName(onNameSet, name)}>Let me in!</button>
+      <button onClick={handleSetName}>Let me in!</button>
     </div>
   </div>
-}
-
-function handleSetName(onNameSet, name) {
-  name && onNameSet(name)
 }

@@ -2,15 +2,19 @@ import React, { useState, useRef } from 'react';
 
 import './NoteEditor.scss'
 
-export default function NoteEditor({onNoteCreate}) {
+interface NoteEditorProps {
+  onNoteCreate: (text: string) => void;
+}
+
+export default function NoteEditor({onNoteCreate}: NoteEditorProps) {
   const [note, setNote] = useState("")
-  const textArea = useRef<any>(null);
+  const textArea = useRef<HTMLTextAreaElement>(null);
 
   const handleCreate = function() {
     onNoteCreate(note)
 
     setNote("")
-    textArea.current.focus()
+    textArea.current?.focus()
   }
 
   return <div>

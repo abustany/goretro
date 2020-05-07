@@ -1,16 +1,18 @@
-import React, { useReducer, useEffect } from 'react';
+import React, { useReducer, useEffect, Dispatch } from 'react';
 
 import Err from './components/Error';
 import Loading from './components/Loading';
 import Login from './components/Login';
 import Room from './components/Room';
+import * as types from './types';
+import { Connection } from './connection';
 
 import './App.scss'
 
 // - If the room doesn't exist.
 // - Bug when creating the room.
 
-export default function App(props) {
+export default function App(props: {connection: Connection}) {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export default function App(props) {
       if (state.roomId) {
         props.connection.joinRoom(state.roomId)
       } else {
-        props.connection.createRoom(state.roomId)
+        props.connection.createRoom("This room has no name :-(") // TODO(abustany): What do we do for the room name?
       }
     }
   }, [state.identified, state.roomId])
@@ -40,15 +42,15 @@ export default function App(props) {
   );
 }
 
-function mainComponent(connection, state, dispatch) {
+function mainComponent(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>) {
   // TODO: Have a generic central component.
 
-  if (state.err) {
-    return <Err message={state.err}/>
+  if (state.error) {
+    return <Err message={state.error}/>
   }
 
   if (!state.name) {
-    return <Login onNameSet={(name) => handleNameSet(connection, state, dispatch, name) }/>
+    return <Login onNameSet={(name) => handleNameSet(connection, dispatch, name) }/>
   }
 
   if (!state.room) {
@@ -59,29 +61,35 @@ function mainComponent(connection, state, dispatch) {
     room={state.room}
     isAdmin={state.roomAdmin}
     notes={state.notes}
-    onNoteCreate={(note) => { handleNoteCreate(connection, state, dispatch, note) }}
+    onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
     onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
   />
 }
 
-function handleNameSet(connection, state, dispatch, name) {
+function handleNameSet(connection: Connection, dispatch: Dispatch<types.Action>, name: string): void {
   dispatch({type: 'name', payload: name})
   connection.identify(name).then(() => {
     dispatch({type: 'identifyReceived', payload: true})
   })
 }
 
-function handleRoomStateIncrement(connection, state) {
-  connection.setRoomState(state.room.state + 1)
+function handleRoomStateIncrement(connection: Connection, state: types.State): void {
+  connection.setRoomState(state.room!.state + 1)
 }
 
-function handleNoteCreate(connection, state, dispatch, note) {
+function handleNoteCreate(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>, mood: types.Mood, text: string): void {
+  const note = {
+    authorId: connection.clientId,
+    id: state.notes.length,
+    text: text,
+    mood: mood,
+  };
   dispatch({type: 'noteCreated', payload: note})
-  connection.saveNote(note)
+  connection.saveNote(note.id, note.text, note.mood)
 }
 
 // Connect the EventSource to the store.
-async function connect(connection, dispatch) {
+function connect(connection: Connection, dispatch: Dispatch<types.Action>): void {
   connection.onMessage((message) => {
     switch (message.event) {
       case "state-changed":
@@ -105,11 +113,11 @@ async function connect(connection, dispatch) {
   connection.start().then(() => {
     // Connected
   }).catch((err) => {
-    dispatch({type: 'connectionError', payload: err})
+    dispatch({type: 'connectionError', payload: err.toString()})
   })
 }
 
-async function readRoomIdFromURL(dispatch) {
+function readRoomIdFromURL(dispatch: Dispatch<types.Action>): void {
   const roomId = (new URL(window.location.toString())).searchParams.get('roomId')
   console.log(`roomId: ${roomId}`)
   if (!roomId) {
@@ -120,17 +128,10 @@ async function readRoomIdFromURL(dispatch) {
 
 // State
 
-const initialState = {
-  error: null,
+const initialState: types.State = {
   connected: false,
-
-  name: null,
   identified: false,
-
-  roomId: null,
   roomAdmin: true,
-  room: null,
-
   notes: [],
 }
 
@@ -157,12 +158,12 @@ const initialState = {
 //   notes: [],
 // }
 
-function reducer(state, action) {
+function reducer(state: types.State, action: types.Action): types.State {
   switch (action.type) {
     case 'connectionStatus':
       return {...state, connected: action.payload}
     case 'connectionError':
-      return {...state, err: action.payload}
+      return {...state, error: action.payload}
 
     case 'name':
       return {...state, name: action.payload}
@@ -172,20 +173,20 @@ function reducer(state, action) {
     case 'roomIdSetFromURL':
       return {...state, roomAdmin: false, roomId: action.payload}
     case 'roomReceive':
-      return {...state, roomLoading: false, room: action.payload}
+      return {...state, room: action.payload}
     case 'roomParticipantAdd':
       return {
         ...state,
         room: {
-          ...state.room,
+          ...state.room!,
           participants: [
-            ...state.room.participants,
+            ...state.room!.participants,
             action.payload
           ]
         }
       }
     case 'roomStateChanged':
-      return {...state, room: {...state.room, state: action.payload}}
+      return {...state, room: {...state.room!, state: action.payload}}
 
     case 'noteCreated':
       return {...state, notes: [...state.notes, action.payload]}
