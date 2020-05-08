@@ -193,7 +193,7 @@ func NewHandler(prefix string) *Handler {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Printf("panic happened will handling %s %s: %s", r.Method, r.URL.String(), err)
+			log.Printf("panic happened while handling %s %s: %s", r.Method, r.URL.String(), err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 		}
 	}()
