@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,12 +14,160 @@ import (
 	"time"
 )
 
+func makeClientID(t *testing.T) ClientID {
+	clientID, err := NewClientID()
+	if err != nil {
+		t.Fatalf("error generating second client ID: %s", err)
+	}
+
+	return clientID
+}
+
+func TestSendOnUnknownClient(t *testing.T) {
+	if err := NewHandler("api").Send(makeClientID(t), "client does not exist", 33); !errors.Is(err, errUnknownClient) {
+		t.Errorf("sending a message to an unknown client should return errUnknownClient")
+	}
+}
+
+func TestListenOnUnknownClient(t *testing.T) {
+	if _, err := NewHandler("api").Listen(makeClientID(t)); !errors.Is(err, errUnknownClient) {
+		t.Errorf("listening on an unknown client should return errUnknownClient")
+	}
+}
+
+func TestInvalidCommands(t *testing.T) {
+	handler := NewHandler("api")
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	baseURL := server.URL + "/api/"
+
+	clientID := makeClientID(t)
+	clientSecret, err := ClientSecretFromString("R0sxpQUrf7Yc2_uqbQi6E_YJUXUbKqXM-v7dm_m9qe-LuEAtR-ST9IUvwn31_dgSFMeJf51XVhZA-1XhytCnjg==")
+	if err != nil {
+		t.Fatalf("error parsing client secret: %s", err)
+	}
+
+	type testCommand struct {
+		Name     interface{} `json:"name"`
+		ClientID interface{} `json:"clientId"`
+		Secret   interface{} `json:"secret"`
+	}
+
+	makeCommand := func(t *testing.T, patch ...func(c *testCommand)) string {
+		t.Helper()
+
+		c := testCommand{
+			ClientID: clientID.String(),
+			Secret:   clientSecret.String(),
+		}
+
+		for _, p := range patch {
+			p(&c)
+		}
+
+		res, err := json.Marshal(c)
+		if err != nil {
+			t.Fatalf("error marshaling command: %s", err)
+		}
+
+		return string(res)
+	}
+
+	sendCommand := func(t *testing.T, input string, expectedCode int) {
+		t.Helper()
+		res, err := http.Post(baseURL+"command", jsonContentType, strings.NewReader(input))
+		if err != nil {
+			t.Fatalf("error sending command: %s", err)
+		}
+
+		res.Body.Close()
+		if res.StatusCode != expectedCode {
+			t.Errorf("expected status %d, got %d", expectedCode, res.StatusCode)
+		}
+	}
+
+	getEvents := func(t *testing.T, clientID string, expectedCode int) {
+		t.Helper()
+		res, err := http.Get(baseURL + "events/" + clientID)
+		if err != nil {
+			t.Fatalf("error sending events request: %s", err)
+		}
+
+		res.Body.Close()
+		if res.StatusCode != expectedCode {
+			t.Errorf("expected status %d, got %d", expectedCode, res.StatusCode)
+		}
+	}
+
+	for _, tc := range []struct {
+		Name  string
+		Input string
+	}{
+		{
+			Name:  "invalid JSON",
+			Input: "this is not JSON",
+		},
+		{
+			Name:  "invalid command name",
+			Input: makeCommand(t, func(c *testCommand) { c.Name = 33 }),
+		},
+		{
+			Name:  "invalid client ID (type)",
+			Input: makeCommand(t, func(c *testCommand) { c.Name = "hello"; c.ClientID = 33 }),
+		},
+		{
+			Name:  "invalid client ID (value)",
+			Input: makeCommand(t, func(c *testCommand) { c.Name = "hello"; c.ClientID = "not a valid client ID" }),
+		},
+		{
+			Name:  "invalid client secret (type)",
+			Input: makeCommand(t, func(c *testCommand) { c.Name = "hello"; c.Secret = 33 }),
+		},
+		{
+			Name:  "invalid client secret (value)",
+			Input: makeCommand(t, func(c *testCommand) { c.Name = "hello"; c.Secret = "not a valid client secret" }),
+		},
+		{
+			Name:  "invalid command name",
+			Input: makeCommand(t, func(c *testCommand) { c.Name = "wat" }),
+		},
+		{
+			Name:  "data before hello",
+			Input: makeCommand(t, func(c *testCommand) { c.Name = "data"; c.ClientID = makeClientID(t) }),
+		},
+	} {
+		t.Run(tc.Name, func(t *testing.T) {
+			sendCommand(t, tc.Input, http.StatusBadRequest)
+		})
+	}
+
+	t.Run("invalid client secret", func(t *testing.T) {
+		clientID := makeClientID(t)
+		zeroClientSecret := ClientSecret{}.String()
+		sendCommand(t, makeCommand(t, func(c *testCommand) { c.Name = "hello"; c.ClientID = clientID }), http.StatusOK)
+		sendCommand(t, makeCommand(t, func(c *testCommand) { c.Name = "data"; c.ClientID = clientID; c.Secret = zeroClientSecret }), http.StatusBadRequest)
+	})
+
+	t.Run("invalid client ID in events request", func(t *testing.T) {
+		getEvents(t, "not a valid client ID", http.StatusBadRequest)
+	})
+
+	t.Run("unknown client ID in events request", func(t *testing.T) {
+		clientID := makeClientID(t)
+		sendCommand(t, makeCommand(t, func(c *testCommand) { c.Name = "hello"; c.ClientID = clientID }), http.StatusOK)
+		getEvents(t, makeClientID(t).String(), http.StatusBadRequest)
+	})
+}
+
 func TestHelloKeepaliveGoodbye(t *testing.T) {
 	keepAliveInterval = 200 * time.Millisecond
 
 	handler := NewHandler("api")
 	server := httptest.NewServer(handler)
 	defer server.Close()
+
+	incomingConnections := handler.ListenConnections()
 
 	baseURL := server.URL + "/api/"
 	clientID, err := ClientIDFromString("VHUFS_CXZf1rn4IFPRY7fA==")
@@ -30,6 +179,17 @@ func TestHelloKeepaliveGoodbye(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error parsing client secret: %s", err)
 	}
+
+	go func(t *testing.T) {
+		select {
+		case incomingClientID := <-incomingConnections:
+			if incomingClientID != clientID {
+				t.Errorf("invalid client ID in incoming connection listener: expected %s, got %s", clientID, incomingClientID)
+			}
+		case <-time.After(5 * time.Second):
+			t.Errorf("timeout waiting for incoming connection listener")
+		}
+	}(t)
 
 	// 1. Send hello command
 	helloRes, err := postHello(baseURL, clientID.String(), clientSecret.String())
