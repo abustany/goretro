@@ -127,9 +127,11 @@ func (r *Retro) RemoveParticipant(clientID sseconn.ClientID) []Event {
 
 	newParticipants := make([]Participant, 0, len(r.participants))
 	events := make([]Event, 0, len(newParticipants))
+	removed := false
 
 	for _, p := range r.participants {
 		if p.ClientID == clientID {
+			removed = true
 			continue
 		}
 
@@ -139,6 +141,10 @@ func (r *Retro) RemoveParticipant(clientID sseconn.ClientID) []Event {
 			Name:      participantRemovedEventName,
 			Payload:   Participant{ClientID: clientID},
 		})
+	}
+
+	if !removed {
+		return nil
 	}
 
 	r.participants = newParticipants
