@@ -453,6 +453,7 @@ func (h *Handler) createConnection(clientID ClientID, secret ClientSecret) (*cli
 		select {
 		case listener <- clientID:
 		default:
+			log.Printf("connection listener lagging behind, dropping data")
 		}
 	}
 
