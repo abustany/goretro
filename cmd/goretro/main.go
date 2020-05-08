@@ -13,7 +13,7 @@ import (
 const apiPrefix = "/api/"
 
 func main() {
-	listenAddress := flag.String("listen", "127.0.0.1:1407", "address on which to listen")
+	listenAddress := flag.String("listen", "0.0.0.0:1407", "address on which to listen")
 	uiDir := flag.String("ui", "", "directory with the UI files. If unset, do no serve UI files.")
 	flag.Parse()
 
