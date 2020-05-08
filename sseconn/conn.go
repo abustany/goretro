@@ -139,11 +139,6 @@ type command struct {
 
 const helloCommandName = "hello"
 
-type helloCommand struct {
-	command
-	Secret string `json:"secret"`
-}
-
 type helloResult struct {
 	EventsURL string `json:"eventsUrl"`
 }
@@ -292,12 +287,7 @@ func (h *Handler) commandHandler(in io.Reader) (interface{}, error) {
 
 	switch baseCmd.Name {
 	case helloCommandName:
-		cmd := helloCommand{}
-		if err := json.Unmarshal(rawCmd, &cmd); err != nil {
-			return nil, errInvalidRequest
-		}
-
-		result, err = h.handleHelloCommand(clientID, clientSecret, cmd)
+		result, err = h.handleHelloCommand(clientID, clientSecret)
 	case dataCommandName:
 		cmd := dataCommand{}
 		if err := json.Unmarshal(rawCmd, &cmd); err != nil {
@@ -312,7 +302,7 @@ func (h *Handler) commandHandler(in io.Reader) (interface{}, error) {
 	return result, err
 }
 
-func (h *Handler) handleHelloCommand(clientID ClientID, clientSecret ClientSecret, cmd helloCommand) (helloResult, error) {
+func (h *Handler) handleHelloCommand(clientID ClientID, clientSecret ClientSecret) (helloResult, error) {
 	if err := h.closeConnectionIfExists(clientID, clientSecret); err != nil && err != errUnknownClient {
 		return helloResult{}, fmt.Errorf("error closing existing connection: %w", err)
 	}
