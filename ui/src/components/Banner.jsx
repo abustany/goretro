@@ -1,26 +1,26 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import logo from './logo.png';
 import './Banner.scss';
 
 export default function Banner() {
+  const canvas = useRef()
   useEffect(() => {
-    const image = main()
+    const image = main(canvas.current)
     return () => { image.remove() }
   }, [])
 
-  return <canvas className="Banner" id="glcanvas"></canvas>
+  return <canvas ref={canvas} className="Banner" id="glcanvas"></canvas>
 }
 
-function main() {
+function main(canvas) {
   const image = new Image();
   image.src = logo;
-  image.onload = function() { render(image); }
+  image.onload = function() { render(canvas, image); }
   return image
 }
 
-function render(image) {
-  const canvas = document.getElementById('glcanvas');
+function render(canvas, image) {
   canvas.setAttribute('width', image.width);
   canvas.setAttribute('height', image.height);
 
