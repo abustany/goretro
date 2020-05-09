@@ -2,15 +2,22 @@ import React, { useState } from 'react';
 
 import '../stylesheets/utils.scss'
 
+const nameLocalStorageKey: string = "nickname"
+
 interface LoginProps {
   onNameSet: (name: string) => void;
 }
 
 export default function Login({onNameSet}: LoginProps) {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(
+    localStorage.getItem(nameLocalStorageKey) || ""
+  );
 
   const handleSetName = () => {
-    if (name) onNameSet(name);
+    if (name) {
+      localStorage.setItem(nameLocalStorageKey, name)
+      onNameSet(name);
+    }
   }
 
   return <div className="centered-col-300 center-form vmargin-20pc">
