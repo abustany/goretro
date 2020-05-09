@@ -1,4 +1,4 @@
-FROM node:14.2 AS build-fe
+FROM node:14.2-alpine3.10 AS build-fe
 WORKDIR /src/
 COPY ui/package.json ui/yarn.lock ./
 RUN yarn
