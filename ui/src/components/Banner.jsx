@@ -5,7 +5,8 @@ import './Banner.scss';
 
 export default function Banner() {
   useEffect(() => {
-    main()
+    const image = main()
+    return () => { image.remove() }
   }, [])
 
   return <canvas className="Banner" id="glcanvas"></canvas>
@@ -15,11 +16,10 @@ function main() {
   const image = new Image();
   image.src = logo;
   image.onload = function() { render(image); }
+  return image
 }
 
 function render(image) {
-  "use strict";
-
   const canvas = document.getElementById('glcanvas');
   canvas.setAttribute('width', image.width);
   canvas.setAttribute('height', image.height);
