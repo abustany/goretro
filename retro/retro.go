@@ -267,8 +267,15 @@ func (r *Retro) SaveNote(clientID sseconn.ClientID, ID uint, text string, mood M
 }
 
 func (r *Retro) serializeForClientLocked(clientID sseconn.ClientID) SerializedRetro {
-	notes := make(map[sseconn.ClientID][]Note, 1)
-	notes[clientID] = append([]Note{}, r.notes[clientID]...)
+	clientNotes := r.notes[clientID]
+
+	if len(clientNotes) == 0 {
+		return r.serializeLockedHelper(map[sseconn.ClientID][]Note{})
+	}
+
+	notes := map[sseconn.ClientID][]Note{
+		clientID: append([]Note{}, clientNotes...),
+	}
 
 	return r.serializeLockedHelper(notes)
 }
