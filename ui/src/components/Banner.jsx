@@ -1,11 +1,14 @@
 import React, { useEffect } from 'react';
+
 import logo from './logo.png';
+import './Banner.scss';
 
 export default function Banner() {
   useEffect(() => {
     main()
   }, [])
-  return <canvas id="glcanvas" width="0" height="0"></canvas>
+
+  return <canvas className="Banner" id="glcanvas"></canvas>
 }
 
 function main() {

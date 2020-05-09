@@ -33,40 +33,48 @@ export default function App(props: {connection: Connection}) {
 
   return (
     <div className="App">
-      <header className="App__header">
-        <h1 className="retro-font">Goretro</h1>
-        { state.name ? <span>with <strong>{state.name}</strong></span> : <span>Here comes a new challenger!</span> }
-      </header>
+      { headerComponent(state) }
 
       { mainComponent(props.connection, state, dispatch) }
     </div>
   );
 }
 
+function headerComponent(state: types.State) {
+  if (!state.error && !state.name) {
+    return <Banner/>
+  }
+
+  return <header>
+    <div className="App__header">
+      <h1 className="retro-font">Goretro</h1>
+      { state.name ? <span>with <strong>{state.name}</strong></span> : <span>Here comes a new challenger!</span> }
+    </div>
+  </header>
+}
+
 function mainComponent(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>) {
   // TODO: Have a generic central component.
 
-  return <Banner/>
+  if (state.error) {
+    return <Err message={state.error}/>
+  }
 
-  // if (state.error) {
-  //   return <Err message={state.error}/>
-  // }
+  if (!state.name) {
+    return <Login onNameSet={(name) => handleNameSet(connection, dispatch, name) }/>
+  }
 
-  // if (!state.name) {
-  //   return <Login onNameSet={(name) => handleNameSet(connection, dispatch, name) }/>
-  // }
+  if (!state.room) {
+    return <Loading/>
+  }
 
-  // if (!state.room) {
-  //   return <Loading/>
-  // }
-
-  // return <Room
-  //   room={state.room}
-  //   isAdmin={state.roomAdmin}
-  //   notes={state.notes}
-  //   onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
-  //   onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
-  // />
+  return <Room
+    room={state.room}
+    isAdmin={state.roomAdmin}
+    notes={state.notes}
+    onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
+    onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
+  />
 }
 
 function handleNameSet(connection: Connection, dispatch: Dispatch<types.Action>, name: string): void {
