@@ -38,8 +38,14 @@ jobs:
           version: v1.26
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build backend binary
-        run: go build ./cmd/...
-
-      - name: Build UI
-        run: cd ui && yarn && yarn build
+      # We also build the Docker image for PRs, since we want to check those
+      # don't break the build. We just don't push it.
+      - name: Docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: abustany/goretro
+          tags: latest
+          add_git_labels: true
+          push: ${{ github.ref == 'refs/heads/master' }}
