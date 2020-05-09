@@ -30,7 +30,7 @@ jobs:
           node-version: '12'
 
       - name: Run backend tests
-        run: go test ./...
+        run: go test -v ./...
 
       - name: Run backend linter
         uses: golangci/golangci-lint-action@v0.1.7
