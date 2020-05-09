@@ -1,101 +1,16 @@
-<!doctype html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style type="text/css">
-/*
-Palette:
+import React, { useEffect } from 'react';
+import logo from './logo.png';
 
-#262524 - almost black
-#F2E6D8 - beige
-#F20505 - bright red
-#F23535 - paler red
-#F2F2F2 - light grey
-*/
-
-body {
-  background-color: #262524;
-
-  font-family: sans-serif;
-  font-size: 13pt;
-  color: #f2f2f2;
+export default function Banner() {
+  useEffect(() => {
+    main()
+  }, [])
+  return <canvas id="glcanvas" width="0" height="0"></canvas>
 }
 
-a {
-  color: inherit;
-}
-
-p {
-  line-height: 1.8em;
-}
-
-#glcanvas {
-  margin-left: 15%;
-  margin-top: 5rem;
-  margin-bottom: 5rem;
-  width: 60%;
-  border: 15px solid #f20505;
-}
-
-.content {
-  width: 60%;
-  margin-left: 15%;
-  margin-bottom: 5rem;
-}
-
-.palette {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-
-.palette > div {
-  flex: 0 0 10rem;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-
-  height: 10rem;
-  border: 1px solid transparent;
-  color: #222;
-}
-
-.palette > .invert {
-  color: #eee;
-}
-    </style>
-  </head>
-  <body>
-    <canvas id="glcanvas" width="0" height="0"></canvas>
-
-    <div class="content">
-      <h1>Design ideas</h1>
-      <p>
-      We want to play on the "retro" name, but keep things readable. The color palette is roughly inspired from the original NES colors.
-      </p>
-
-      <h1>Fonts</h1>
-      <p>
-      The logo font is <a href="https://fonts.google.com/specimen/Press+Start+2P">Press Start 2P</a>, we don't use it anywhere else because it gets tiring quickly.
-      The rest of the app uses whatever <code>sans-serif</code> gives us, although one could probably spend time finding something better.
-      <p>
-
-      <h1>Color palette</h1>
-      <div class="palette">
-        <div class="invert" style="background-color: #262524">#262524</div>
-        <div style="background-color: #F2E6D8">#F2E6D8</div>
-        <div style="background-color: #F20505">#F20505</div>
-        <div style="background-color: #F23535">#F23535</div>
-        <div style="background-color: #F2F2F2">#F2F2F2</div>
-      </div>
-    </div>
-
-  <script>
 function main() {
   const image = new Image();
-  image.src = "logo.png";
+  image.src = logo;
   image.onload = function() { render(image); }
 }
 
@@ -352,8 +267,3 @@ function setRectangle(gl, x, y, width, height) {
      x2, y2,
   ]), gl.STATIC_DRAW);
 }
-
-window.onload = main;
-  </script>
-  </body>
-</html>

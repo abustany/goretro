@@ -4,6 +4,7 @@ import Err from './components/Error';
 import Loading from './components/Loading';
 import Login from './components/Login';
 import Room from './components/Room';
+import Banner from './components/Banner';
 import * as types from './types';
 import { Connection } from './connection';
 
@@ -45,25 +46,27 @@ export default function App(props: {connection: Connection}) {
 function mainComponent(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>) {
   // TODO: Have a generic central component.
 
-  if (state.error) {
-    return <Err message={state.error}/>
-  }
+  return <Banner/>
 
-  if (!state.name) {
-    return <Login onNameSet={(name) => handleNameSet(connection, dispatch, name) }/>
-  }
+  // if (state.error) {
+  //   return <Err message={state.error}/>
+  // }
 
-  if (!state.room) {
-    return <Loading/>
-  }
+  // if (!state.name) {
+  //   return <Login onNameSet={(name) => handleNameSet(connection, dispatch, name) }/>
+  // }
 
-  return <Room
-    room={state.room}
-    isAdmin={state.roomAdmin}
-    notes={state.notes}
-    onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
-    onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
-  />
+  // if (!state.room) {
+  //   return <Loading/>
+  // }
+
+  // return <Room
+  //   room={state.room}
+  //   isAdmin={state.roomAdmin}
+  //   notes={state.notes}
+  //   onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
+  //   onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
+  // />
 }
 
 function handleNameSet(connection: Connection, dispatch: Dispatch<types.Action>, name: string): void {
