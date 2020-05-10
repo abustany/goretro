@@ -31,13 +31,6 @@ var (
 	keepAliveInterval = 10 * time.Second
 )
 
-type clientConnState int
-
-const (
-	helloReceived clientConnState = iota + 1
-	eventsOpen
-)
-
 var (
 	errInvalidRequest      = errors.New("Invalid request")
 	errInvalidClientID     = errors.New("Invalid client ID")
@@ -47,30 +40,14 @@ var (
 	errEventBufferFull     = errors.New("Event buffer full")
 )
 
-// Handler is a HTTP handler that manages bidirectional connections on top of
-// HTTP and SSE.
-//
-// The client-to-server messages are sent over regular HTTP requests, and the
-// server-to-client messages are dispatched via server sent events.
-//
-// This handler handles two routes under a given prefix:
-// 1. POST /prefix/command for client sent messages
-// 2. GET /api/events/{ID} for server sent events
-//
-// Connection steps:
-// 1. Client sends initial POST to open connection with a client ID (how do we prevent takeovers?)
-// 2. Server sends back SSE endpoint URL
-// 3. Client creates EventSource and when the connection is open, confirms to the server.
-type Handler struct {
-	prefix              string
-	router              *mux.Router
-	lock                sync.RWMutex
-	connections         map[ClientID]*clientConn
-	connectionListeners []chan ClientID
-}
+// Client Connection
 
-type ClientID [clientIDLength]byte
-type ClientSecret [clientSecretLength]byte
+type clientConnState int
+
+const (
+	helloReceived clientConnState = iota + 1
+	eventsOpen
+)
 
 type clientConn struct {
 	state     clientConnState
@@ -79,6 +56,10 @@ type clientConn struct {
 	eventChan chan interface{}
 	listeners []chan json.RawMessage
 }
+
+// ClientID
+
+type ClientID [clientIDLength]byte
 
 func ClientIDFromString(s string) (ClientID, error) {
 	var c ClientID
@@ -115,6 +96,10 @@ func (c ClientID) IsZero() bool {
 	return bytes.Equal(zero[:], c[:])
 }
 
+// ClientSecret
+
+type ClientSecret [clientSecretLength]byte
+
 func ClientSecretFromString(s string) (ClientSecret, error) {
 	var c ClientSecret
 
@@ -130,6 +115,8 @@ func ClientSecretFromString(s string) (ClientSecret, error) {
 func (c ClientSecret) String() string {
 	return base64.URLEncoding.EncodeToString(c[:])
 }
+
+// Commands
 
 type command struct {
 	Name     string `json:"name"`
@@ -156,6 +143,30 @@ type dataResult struct {
 type eventData struct {
 	Event   string      `json:"event"`
 	Payload interface{} `json:"payload,omitempty"`
+}
+
+// Handler
+
+// Handler is a HTTP handler that manages bidirectional connections on top of
+// HTTP and SSE.
+//
+// The client-to-server messages are sent over regular HTTP requests, and the
+// server-to-client messages are dispatched via server sent events.
+//
+// This handler handles two routes under a given prefix:
+// 1. POST /prefix/command for client sent messages
+// 2. GET /api/events/{ID} for server sent events
+//
+// Connection steps:
+// 1. Client sends initial POST to open connection with a client ID (how do we prevent takeovers?)
+// 2. Server sends back SSE endpoint URL
+// 3. Client creates EventSource and when the connection is open, confirms to the server.
+type Handler struct {
+	prefix              string
+	router              *mux.Router
+	lock                sync.RWMutex
+	connections         map[ClientID]*clientConn
+	connectionListeners []chan ClientID
 }
 
 func NewHandler(prefix string) *Handler {
@@ -236,6 +247,8 @@ func (h *Handler) Listen(clientID ClientID) (<-chan json.RawMessage, error) {
 
 	return ch, nil
 }
+
+// Handler - Private
 
 func (h *Handler) writeError(w http.ResponseWriter, err error) {
 	switch {
