@@ -1,33 +1,29 @@
 import React, { useEffect, useRef } from 'react';
 
-import logo from './logo.png';
-import './Banner.scss';
+import logo from './WebGLBanner.png';
+import './WebGLBanner.scss';
 
-export default function Banner() {
+export default function Banner({onNotDisplayable}) {
   const canvasRef = useRef(null)
   const animationRef = useRef(null)
 
   useEffect(() => {
-    animate(canvasRef, animationRef)
-
-    return () => {
-      if (!animationRef.current) return
-      cancelAnimationFrame(animationRef.current)
-    }
+    animate(canvasRef, animationRef, onNotDisplayable)
+    return () => animationRef.current && cancelAnimationFrame(animationRef.current)
   }, [])
 
   return <canvas ref={canvasRef} className="Banner"/>
 }
 
-function animate(canvasRef, animationRef) {
+function animate(canvasRef, animationRef, notDisplayable) {
   const image = new Image();
   image.src = logo;
   image.onload = () => {
-    render(canvasRef, animationRef, image);
+    render(canvasRef, animationRef, image, notDisplayable);
   }
 }
 
-function render(canvasRef, animationRef, image) {
+function render(canvasRef, animationRef, image, notDisplayable) {
   const canvas = canvasRef.current
   // Component has been unmounted already
   if (!canvas) return
@@ -35,15 +31,22 @@ function render(canvasRef, animationRef, image) {
   canvas.setAttribute('width', image.width);
   canvas.setAttribute('height', image.height);
 
-  // TODO: If false
   const gl = canvas.getContext('webgl');
+  if (!gl) {
+    console.log("WebGL unavailable")
+    notDisplayable()
+    return
+  }
 
-  const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-  const program = createProgram(gl, vertexShader, fragmentShader);
-
+  const program = createProgram(
+    gl,
+    createShader(gl, gl.VERTEX_SHADER, vertexShaderSource),
+    createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource),
+  );
   if (!program) {
-    throw new Error('error compiling program');
+    console.log("Failed to compile")
+    notDisplayable()
+    return
   }
 
   const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
