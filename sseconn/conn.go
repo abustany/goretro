@@ -160,8 +160,8 @@ type eventData struct {
 // 2. GET /api/events/{ID} for server sent events
 //
 // Connection steps:
-// 1. Client sends initial POST to open connection with a client ID (how do we prevent takeovers?)
-// 2. Server sends back SSE endpoint URL
+// 1. Client sends initial POST to open connection with a client ID (how do we prevent takeovers?).
+// 2. Server sends back SSE endpoint URL.
 // 3. Client creates EventSource and when the connection is open, confirms to the server.
 type Handler struct {
 	prefix              string
