@@ -4,26 +4,38 @@ import logo from './logo.png';
 import './Banner.scss';
 
 export default function Banner() {
-  const canvas = useRef()
+  const canvasRef = useRef(null)
+  const animationRef = useRef(null)
+
   useEffect(() => {
-    const image = main(canvas.current)
-    return () => { image.remove() }
+    animate(canvasRef, animationRef)
+
+    return () => {
+      if (!animationRef.current) return
+      cancelAnimationFrame(animationRef.current)
+    }
   }, [])
 
-  return <canvas ref={canvas} className="Banner" id="glcanvas"></canvas>
+  return <canvas ref={canvasRef} className="Banner"/>
 }
 
-function main(canvas) {
+function animate(canvasRef, animationRef) {
   const image = new Image();
   image.src = logo;
-  image.onload = function() { render(canvas, image); }
-  return image
+  image.onload = () => {
+    render(canvasRef, animationRef, image);
+  }
 }
 
-function render(canvas, image) {
+function render(canvasRef, animationRef, image) {
+  const canvas = canvasRef.current
+  // Component has been unmounted already
+  if (!canvas) return
+
   canvas.setAttribute('width', image.width);
   canvas.setAttribute('height', image.height);
 
+  // TODO: If false
   const gl = canvas.getContext('webgl');
 
   const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
@@ -53,7 +65,7 @@ function render(canvas, image) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
-  requestAnimationFrame(drawScene);
+  animationRef.current = requestAnimationFrame(drawScene);
 
   function drawScene(now) {
     now *= 0.001;
@@ -74,7 +86,7 @@ function render(canvas, image) {
     gl.uniform1f(timeUniformLocation, now);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-    requestAnimationFrame(drawScene);
+    animationRef.current = requestAnimationFrame(drawScene);
   }
 
 }
