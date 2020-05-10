@@ -24,11 +24,6 @@ function render(canvas, image) {
   canvas.setAttribute('width', image.width);
   canvas.setAttribute('height', image.height);
 
-  if (window.location.href.startsWith('file:///')) {
-    alert(`You can't see the cool logo if you open this file directly from the filesystem :-(\n\nCheck docs/design/README.md for more information.`);
-    return;
-  }
-
   const gl = canvas.getContext('webgl');
 
   const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
@@ -85,10 +80,10 @@ function render(canvas, image) {
 }
 
 function createShader(gl, type, source) {
-    var shader = gl.createShader(type);
+    const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
-    var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
     if (success) {
         return shader;
     }
@@ -243,11 +238,11 @@ void main() {
 `;
 
 function createProgram(gl, vertexShader, fragmentShader) {
-  var program = gl.createProgram();
+  const program = gl.createProgram();
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
-  var success = gl.getProgramParameter(program, gl.LINK_STATUS);
+  const success = gl.getProgramParameter(program, gl.LINK_STATUS);
   if (success) {
     return program;
   }
@@ -257,10 +252,10 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 function setRectangle(gl, x, y, width, height) {
-  var x1 = x;
-  var x2 = x + width;
-  var y1 = y;
-  var y2 = y + height;
+  const x1 = x;
+  const x2 = x + width;
+  const y1 = y;
+  const y2 = y + height;
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
      x1, y1,
      x2, y1,
