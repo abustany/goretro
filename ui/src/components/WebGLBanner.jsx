@@ -1,124 +1,52 @@
-<!doctype html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style type="text/css">
-/*
-Palette:
+import React, { useEffect, useRef } from 'react';
 
-#262524 - almost black
-#F2E6D8 - beige
-#F20505 - bright red
-#F23535 - paler red
-#F2F2F2 - light grey
-*/
+import logo from './WebGLBanner.png';
+import './WebGLBanner.scss';
 
-body {
-  background-color: #262524;
+export default function Banner({onNotDisplayable}) {
+  const canvasRef = useRef(null)
+  const animationRef = useRef(null)
 
-  font-family: sans-serif;
-  font-size: 13pt;
-  color: #f2f2f2;
+  useEffect(() => {
+    animate(canvasRef, animationRef, onNotDisplayable)
+    return () => animationRef.current && cancelAnimationFrame(animationRef.current)
+  }, [])
+
+  return <canvas ref={canvasRef} className="Banner"/>
 }
 
-a {
-  color: inherit;
-}
-
-p {
-  line-height: 1.8em;
-}
-
-#glcanvas {
-  margin-left: 15%;
-  margin-top: 5rem;
-  margin-bottom: 5rem;
-  width: 60%;
-  border: 15px solid #f20505;
-}
-
-.content {
-  width: 60%;
-  margin-left: 15%;
-  margin-bottom: 5rem;
-}
-
-.palette {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-
-.palette > div {
-  flex: 0 0 10rem;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-
-  height: 10rem;
-  border: 1px solid transparent;
-  color: #222;
-}
-
-.palette > .invert {
-  color: #eee;
-}
-    </style>
-  </head>
-  <body>
-    <canvas id="glcanvas" width="0" height="0"></canvas>
-
-    <div class="content">
-      <h1>Design ideas</h1>
-      <p>
-      We want to play on the "retro" name, but keep things readable. The color palette is roughly inspired from the original NES colors.
-      </p>
-
-      <h1>Fonts</h1>
-      <p>
-      The logo font is <a href="https://fonts.google.com/specimen/Press+Start+2P">Press Start 2P</a>, we don't use it anywhere else because it gets tiring quickly.
-      The rest of the app uses whatever <code>sans-serif</code> gives us, although one could probably spend time finding something better.
-      <p>
-
-      <h1>Color palette</h1>
-      <div class="palette">
-        <div class="invert" style="background-color: #262524">#262524</div>
-        <div style="background-color: #F2E6D8">#F2E6D8</div>
-        <div style="background-color: #F20505">#F20505</div>
-        <div style="background-color: #F23535">#F23535</div>
-        <div style="background-color: #F2F2F2">#F2F2F2</div>
-      </div>
-    </div>
-
-  <script>
-function main() {
+function animate(canvasRef, animationRef, notDisplayable) {
   const image = new Image();
-  image.src = "logo.png";
-  image.onload = function() { render(image); }
+  image.src = logo;
+  image.onload = () => {
+    render(canvasRef, animationRef, image, notDisplayable);
+  }
 }
 
-function render(image) {
-  "use strict";
+function render(canvasRef, animationRef, image, notDisplayable) {
+  const canvas = canvasRef.current
+  // Component has been unmounted already
+  if (!canvas) return
 
-  const canvas = document.getElementById('glcanvas');
   canvas.setAttribute('width', image.width);
   canvas.setAttribute('height', image.height);
 
-  if (window.location.href.startsWith('file:///')) {
-    alert(`You can't see the cool logo if you open this file directly from the filesystem :-(\n\nCheck docs/design/README.md for more information.`);
-    return;
+  const gl = canvas.getContext('webgl');
+  if (!gl) {
+    console.log("WebGL unavailable")
+    notDisplayable()
+    return
   }
 
-  const gl = canvas.getContext('webgl');
-
-  const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-  const program = createProgram(gl, vertexShader, fragmentShader);
-
+  const program = createProgram(
+    gl,
+    createShader(gl, gl.VERTEX_SHADER, vertexShaderSource),
+    createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource),
+  );
   if (!program) {
-    throw new Error('error compiling program');
+    console.log("Failed to compile")
+    notDisplayable()
+    return
   }
 
   const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
@@ -140,7 +68,7 @@ function render(image) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
-  requestAnimationFrame(drawScene);
+  animationRef.current = requestAnimationFrame(drawScene);
 
   function drawScene(now) {
     now *= 0.001;
@@ -161,16 +89,16 @@ function render(image) {
     gl.uniform1f(timeUniformLocation, now);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-    requestAnimationFrame(drawScene);
+    animationRef.current = requestAnimationFrame(drawScene);
   }
 
 }
 
 function createShader(gl, type, source) {
-    var shader = gl.createShader(type);
+    const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
-    var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
     if (success) {
         return shader;
     }
@@ -325,11 +253,11 @@ void main() {
 `;
 
 function createProgram(gl, vertexShader, fragmentShader) {
-  var program = gl.createProgram();
+  const program = gl.createProgram();
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
-  var success = gl.getProgramParameter(program, gl.LINK_STATUS);
+  const success = gl.getProgramParameter(program, gl.LINK_STATUS);
   if (success) {
     return program;
   }
@@ -339,10 +267,10 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 function setRectangle(gl, x, y, width, height) {
-  var x1 = x;
-  var x2 = x + width;
-  var y1 = y;
-  var y2 = y + height;
+  const x1 = x;
+  const x2 = x + width;
+  const y1 = y;
+  const y2 = y + height;
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
      x1, y1,
      x2, y1,
@@ -352,8 +280,3 @@ function setRectangle(gl, x, y, width, height) {
      x2, y2,
   ]), gl.STATIC_DRAW);
 }
-
-window.onload = main;
-  </script>
-  </body>
-</html>

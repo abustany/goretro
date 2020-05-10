@@ -4,6 +4,7 @@ import Err from './components/Error';
 import Loading from './components/Loading';
 import Login from './components/Login';
 import Room from './components/Room';
+import WebGLBanner from './components/WebGLBanner';
 import * as types from './types';
 import { Connection } from './connection';
 
@@ -32,14 +33,24 @@ export default function App(props: {connection: Connection}) {
 
   return (
     <div className="App">
-      <header className="App__header">
-        <h1 className="retro-font">Goretro</h1>
-        { state.name ? <span>with <strong>{state.name}</strong></span> : <span>Here comes a new challenger!</span> }
-      </header>
+      { headerComponent(state, dispatch) }
 
       { mainComponent(props.connection, state, dispatch) }
     </div>
   );
+}
+
+function headerComponent(state: types.State, dispatch: Dispatch<types.Action>) {
+  if (state.webGLBanner && !state.error && !state.name) {
+    return <WebGLBanner onNotDisplayable={() => { dispatch({type: 'webGLBannerDisabled'}) }}/>
+  }
+
+  return <header>
+    <div className="App__header">
+      <h1 className="retro-font">Goretro</h1>
+      { state.name ? <span>with <strong>{state.name}</strong></span> : <span>Here comes a new challenger!</span> }
+    </div>
+  </header>
 }
 
 function mainComponent(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>) {
@@ -130,33 +141,11 @@ function readRoomIdFromURL(dispatch: Dispatch<types.Action>): void {
 
 const initialState: types.State = {
   connected: false,
+  webGLBanner: true,
   identified: false,
   roomAdmin: true,
   notes: [],
 }
-
-// const initialState = {
-//   connection: new Connection(),
-//   error: null,
-//   connected: false,
-
-//   name: "Charles",
-//   identified: false,
-
-//   roomId: "nullasdfs",
-//   roomAdmin: true,
-//   room: {
-//     state: 2,
-//     participants: [
-//       {
-//         id: 'ID',
-//         name: 'Charles'
-//       }
-//     ]
-//   },
-
-//   notes: [],
-// }
 
 function reducer(state: types.State, action: types.Action): types.State {
   switch (action.type) {
@@ -164,7 +153,8 @@ function reducer(state: types.State, action: types.Action): types.State {
       return {...state, connected: action.payload}
     case 'connectionError':
       return {...state, error: action.payload}
-
+    case 'webGLBannerDisabled':
+      return {...state, webGLBanner: false}
     case 'name':
       return {...state, name: action.payload}
     case 'identifyReceived':
