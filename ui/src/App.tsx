@@ -71,7 +71,6 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
   return <Room
     room={state.room}
     isAdmin={state.roomAdmin}
-    notes={state.notes}
     onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
     onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
   />
@@ -91,7 +90,7 @@ function handleRoomStateIncrement(connection: Connection, state: types.State): v
 function handleNoteCreate(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>, mood: types.Mood, text: string): void {
   const note = {
     authorId: connection.clientId,
-    id: state.notes.length,
+    id: state.room!.notes.length,
     text: text,
     mood: mood,
   };
@@ -107,7 +106,10 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
         dispatch({type: 'roomStateChanged', payload: message.payload})
         break
       case "current-state":
-        dispatch({type: 'roomReceive', payload: message.payload})
+        // TODO(charles): change when BE changes.
+        const room = message.payload
+        room.notes = restructureRoomNotes(room.notes)
+        dispatch({type: 'roomReceive', payload: room})
         // Change URL
         window.history.replaceState(null, document.title, `/?roomId=${message.payload.id}`);
         break
@@ -144,7 +146,6 @@ const initialState: types.State = {
   webGLBanner: true,
   identified: false,
   roomAdmin: true,
-  notes: [],
 }
 
 function reducer(state: types.State, action: types.Action): types.State {
@@ -171,7 +172,7 @@ function reducer(state: types.State, action: types.Action): types.State {
           ...state.room!,
           participants: [
             ...state.room!.participants,
-            action.payload
+            action.payload,
           ]
         }
       }
@@ -179,9 +180,22 @@ function reducer(state: types.State, action: types.Action): types.State {
       return {...state, room: {...state.room!, state: action.payload}}
 
     case 'noteCreated':
-      return {...state, notes: [...state.notes, action.payload]}
+      return {
+        ...state,
+        room: {
+          ...state.room!,
+          notes: [
+            ...state.room!.notes,
+            action.payload,
+          ]
+        }
+      }
 
     default:
       throw new Error(`Unknown action ${action}`);
   }
+}
+
+function restructureRoomNotes(notes: {[clientId: string]: types.Note[]}): types.Note[] {
+  return Object.values(notes).flat();
 }

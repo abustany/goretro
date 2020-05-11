@@ -11,7 +11,6 @@ type OnNoteCreateCallback = (mood: types.Mood, text: string) => void;
 interface RoomProps {
   room: types.Room;
   isAdmin: boolean;
-  notes: types.Note[];
   onNoteCreate: OnNoteCreateCallback;
   onStateTransition: () => void;
 }
@@ -25,35 +24,38 @@ const MoodIcons = {
 const StateLabel = {
   [types.RoomState.WAITING_FOR_PARTICIPANTS]: "Waiting for people to join...",
   [types.RoomState.RUNNING]: "Running",
-  [types.RoomState.ACTION_POINTS]: "Finding action points"
+  [types.RoomState.REVIEWING]: "Finding action points"
 }
 
 function onNoteCreateHandler(callback: OnNoteCreateCallback, mood: types.Mood): (text: string) => void {
   return (text) => callback(mood, text);
 }
 
-export default function Room({room, isAdmin, notes, onNoteCreate, onStateTransition}: RoomProps) {
-  console.log(room.participants)
+export default function Room({room, isAdmin, onNoteCreate, onStateTransition}: RoomProps) {
   const participants = normalizeParticipants(room.participants)
-  console.log(participants)
 
   const isWaiting = room.state === types.RoomState.WAITING_FOR_PARTICIPANTS
   const isRunning = room.state === types.RoomState.RUNNING
-  const isReviewing = room.state === types.RoomState.ACTION_POINTS
   const editable = isRunning
 
-  const actualNotes = isReviewing ? restructureRoomNotes(room.notes) : notes
-  const notesByMood = (mood: types.Mood) => actualNotes.filter((n) => n.mood === mood)
+  const notesByMood = (mood: types.Mood) => room.notes.filter((n) => n.mood === mood)
 
   return <div className="Room">
     { !isWaiting && <div className="Room__columns">
       { [types.Mood.POSITIVE, types.Mood.NEGATIVE, types.Mood.CONFUSED].map(mood =>
-        <Column icon={ MoodIcons[mood] } editable={editable} participants={participants} notes={ notesByMood(mood) } onNoteCreate={ onNoteCreateHandler(onNoteCreate, mood) }/>
+        <Column
+          key={mood}
+          icon={ MoodIcons[mood] }
+          editable={editable}
+          participants={participants}
+          notes={ notesByMood(mood) }
+          onNoteCreate={ onNoteCreateHandler(onNoteCreate, mood) }
+        />
       ) }
     </div> }
 
     <div className={`centered-col-300 center-form ${isWaiting ? "vmargin-20pc" : "Room__footer"}`}>
-      { participantsList(participants) }
+      { participantsListComponent(participants) }
 
       { isAdmin && isWaiting && <div>
         <button onClick={onStateTransition}>Start</button>
@@ -74,10 +76,6 @@ function normalizeParticipants(arr: types.Participant[]): Map<string, types.Part
   return arr.reduce((map, el) => map.set(el.clientId, el), new Map())
 }
 
-function participantsList(participants: Map<string, types.Participant>) {
+function participantsListComponent(participants: Map<string, types.Participant>) {
   return <div>{ Array.from(participants.values()).map(el => el.name ).join(", ") }</div>
-}
-
-function restructureRoomNotes(notes: {[clientId: string]: types.Note[]}): types.Note[] {
-  return Object.values(notes).flat();
 }
