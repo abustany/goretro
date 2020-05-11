@@ -89,8 +89,15 @@ function render(
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
   animationRef.current = requestAnimationFrame(drawScene);
+  let skipRender = false;
 
   function drawScene(now: number): void {
+    if (skipRender) {
+      skipRender = false;
+      animationRef.current = requestAnimationFrame(drawScene);
+      return;
+    }
+
     now *= 0.001;
     gl = gl as WebGLRenderingContext
 
@@ -110,6 +117,7 @@ function render(
     gl.uniform1f(timeUniformLocation, now);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
+    skipRender = true;
     animationRef.current = requestAnimationFrame(drawScene);
   }
 
