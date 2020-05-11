@@ -315,7 +315,16 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 	fragColor = vec4(color,1.0);
 }
 
+void fadeToBackground(in vec2 fragCoord) {
+	vec2 uv =  fragCoord.xy/u_imageResolution.xy;
+  vec3 background = vec3(.149, .145, .141);
+  float factor = -uv.y*2.0;
+  vec3 faded = vec3(1.0, 1.0, 1.0)*factor; // varies between 1 and 0
+  gl_FragColor = gl_FragColor * vec4(faded, 1.0) + vec4(background, 1.0) * vec4(1.0-faded, 1.0);
+}
+
 void main() {
   mainImage(gl_FragColor, gl_FragCoord.xy*vec2(1, -1));
+  fadeToBackground(gl_FragCoord.xy*vec2(1, -1));
 }
 `;
