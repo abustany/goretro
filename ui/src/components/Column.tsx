@@ -15,7 +15,7 @@ interface ColumnProps {
 }
 
 export default function Column({editable, icon, notes, participants, onNoteCreate}: ColumnProps) {
-  const notesComponent = notes.map((n) => <Note note={n} showAuthor={!editable} participants={participants}/>)
+  const notesComponent = notes.map((n) => <Note key={n.authorId + n.id} note={n} showAuthor={!editable} participants={participants}/>)
 
   return <div className='Column center-form'>
     <h2>{icon}</h2>

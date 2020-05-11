@@ -6,13 +6,13 @@ export interface Participant {
 export enum RoomState {
   WAITING_FOR_PARTICIPANTS = 1,
   RUNNING = 2,
-  ACTION_POINTS = 3
+  REVIEWING = 3
 }
 
 export interface Room {
   state: RoomState;
   participants: Participant[];
-  notes: {[clientId: string]: Note[]};
+  notes: Note[];
 }
 
 export enum Mood {
@@ -31,13 +31,11 @@ export interface Note {
 export interface State {
   error?: string;
   connected: boolean;
-  webGLBanner: boolean;
   name?: string;
   identified: boolean;
   roomId?: string;
   roomAdmin: boolean;
   room?: Room;
-  notes: Note[];
 }
 
 export type Action = {
@@ -46,8 +44,6 @@ export type Action = {
 } | {
   type: 'connectionError';
   payload: string; // error message
-} | {
-  type: 'webGLBannerDisabled';
 } | {
   type: 'name';
   payload: string; // name

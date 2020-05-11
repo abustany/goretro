@@ -1,17 +1,15 @@
 import React, { useReducer, useEffect, Dispatch } from 'react';
 
+import { Connection } from './connection';
+import * as types from './types';
+
 import Err from './components/Error';
 import Loading from './components/Loading';
+import Header from './components/Header';
 import Login from './components/Login';
 import Room from './components/Room';
-import WebGLBanner from './components/WebGLBanner';
-import * as types from './types';
-import { Connection } from './connection';
 
 import './App.scss'
-
-// - If the room doesn't exist.
-// - Bug when creating the room.
 
 export default function App(props: {connection: Connection}) {
   const [state, dispatch] = useReducer(reducer, initialState)
@@ -19,43 +17,30 @@ export default function App(props: {connection: Connection}) {
   useEffect(() => {
     connect(props.connection, dispatch)
     readRoomIdFromURL(dispatch)
-  }, [props.connection])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (state.identified) {
       if (state.roomId) {
         props.connection.joinRoom(state.roomId)
       } else {
-        props.connection.createRoom("This room has no name :-(") // TODO(abustany): What do we do for the room name?
+        props.connection.createRoom()
       }
     }
-  }, [state.identified, state.roomId, props.connection])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.identified, state.roomId])
 
   return (
     <div className="App">
-      { headerComponent(state, dispatch) }
+      <Header name={state.name}/>
 
       { mainComponent(props.connection, state, dispatch) }
     </div>
   );
 }
 
-function headerComponent(state: types.State, dispatch: Dispatch<types.Action>) {
-  if (state.webGLBanner && !state.error && !state.name) {
-    return <WebGLBanner onNotDisplayable={() => { dispatch({type: 'webGLBannerDisabled'}) }}/>
-  }
-
-  return <header>
-    <div className="App__header">
-      <h1 className="retro-font">Goretro</h1>
-      { state.name ? <span>with <strong>{state.name}</strong></span> : <span>Here comes a new challenger!</span> }
-    </div>
-  </header>
-}
-
 function mainComponent(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>) {
-  // TODO: Have a generic central component.
-
   if (state.error) {
     return <Err message={state.error}/>
   }
@@ -70,8 +55,8 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
 
   return <Room
     room={state.room}
+    link={window.location.toString()}
     isAdmin={state.roomAdmin}
-    notes={state.notes}
     onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
     onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
   />
@@ -91,7 +76,7 @@ function handleRoomStateIncrement(connection: Connection, state: types.State): v
 function handleNoteCreate(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>, mood: types.Mood, text: string): void {
   const note = {
     authorId: connection.clientId,
-    id: state.notes.length,
+    id: state.room!.notes.length,
     text: text,
     mood: mood,
   };
@@ -99,7 +84,7 @@ function handleNoteCreate(connection: Connection, state: types.State, dispatch: 
   connection.saveNote(note.id, note.text, note.mood)
 }
 
-// Connect the EventSource to the store.
+// Connect the EventSource to the State via Actions.
 function connect(connection: Connection, dispatch: Dispatch<types.Action>): void {
   connection.onMessage((message) => {
     switch (message.event) {
@@ -107,9 +92,12 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
         dispatch({type: 'roomStateChanged', payload: message.payload})
         break
       case "current-state":
-        dispatch({type: 'roomReceive', payload: message.payload})
+        // TODO(charles): change when BE changes.
+        const room = message.payload
+        room.notes = restructureRoomNotes(room.notes)
         // Change URL
         window.history.replaceState(null, document.title, `/?roomId=${message.payload.id}`);
+        dispatch({type: 'roomReceive', payload: room})
         break
       case "participant-added":
         dispatch({type: 'roomParticipantAdd', payload: message.payload})
@@ -141,10 +129,8 @@ function readRoomIdFromURL(dispatch: Dispatch<types.Action>): void {
 
 const initialState: types.State = {
   connected: false,
-  webGLBanner: true,
   identified: false,
   roomAdmin: true,
-  notes: [],
 }
 
 function reducer(state: types.State, action: types.Action): types.State {
@@ -153,8 +139,6 @@ function reducer(state: types.State, action: types.Action): types.State {
       return {...state, connected: action.payload}
     case 'connectionError':
       return {...state, error: action.payload}
-    case 'webGLBannerDisabled':
-      return {...state, webGLBanner: false}
     case 'name':
       return {...state, name: action.payload}
     case 'identifyReceived':
@@ -171,7 +155,7 @@ function reducer(state: types.State, action: types.Action): types.State {
           ...state.room!,
           participants: [
             ...state.room!.participants,
-            action.payload
+            action.payload,
           ]
         }
       }
@@ -179,9 +163,22 @@ function reducer(state: types.State, action: types.Action): types.State {
       return {...state, room: {...state.room!, state: action.payload}}
 
     case 'noteCreated':
-      return {...state, notes: [...state.notes, action.payload]}
+      return {
+        ...state,
+        room: {
+          ...state.room!,
+          notes: [
+            ...state.room!.notes,
+            action.payload,
+          ]
+        }
+      }
 
     default:
       throw new Error(`Unknown action ${action}`);
   }
+}
+
+function restructureRoomNotes(notes: {[clientId: string]: types.Note[]}): types.Note[] {
+  return Object.values(notes).flat();
 }
