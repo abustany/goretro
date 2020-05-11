@@ -95,9 +95,9 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
         // TODO(charles): change when BE changes.
         const room = message.payload
         room.notes = restructureRoomNotes(room.notes)
-        dispatch({type: 'roomReceive', payload: room})
         // Change URL
         window.history.replaceState(null, document.title, `/?roomId=${message.payload.id}`);
+        dispatch({type: 'roomReceive', payload: room})
         break
       case "participant-added":
         dispatch({type: 'roomParticipantAdd', payload: message.payload})
