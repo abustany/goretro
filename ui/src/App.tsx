@@ -70,6 +70,7 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
 
   return <Room
     room={state.room}
+    link={window.location.toString()}
     isAdmin={state.roomAdmin}
     onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
     onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
