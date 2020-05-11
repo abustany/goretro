@@ -10,26 +10,25 @@ import { Connection } from './connection';
 
 import './App.scss'
 
-// - If the room doesn't exist.
-// - Bug when creating the room.
-
 export default function App(props: {connection: Connection}) {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
     connect(props.connection, dispatch)
     readRoomIdFromURL(dispatch)
-  }, [props.connection])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (state.identified) {
       if (state.roomId) {
         props.connection.joinRoom(state.roomId)
       } else {
-        props.connection.createRoom("This room has no name :-(") // TODO(abustany): What do we do for the room name?
+        props.connection.createRoom()
       }
     }
-  }, [state.identified, state.roomId, props.connection])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.identified, state.roomId])
 
   return (
     <div className="App">
@@ -54,8 +53,6 @@ function headerComponent(state: types.State, dispatch: Dispatch<types.Action>) {
 }
 
 function mainComponent(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>) {
-  // TODO: Have a generic central component.
-
   if (state.error) {
     return <Err message={state.error}/>
   }
@@ -99,7 +96,7 @@ function handleNoteCreate(connection: Connection, state: types.State, dispatch: 
   connection.saveNote(note.id, note.text, note.mood)
 }
 
-// Connect the EventSource to the store.
+// Connect the EventSource to the State via Actions.
 function connect(connection: Connection, dispatch: Dispatch<types.Action>): void {
   connection.onMessage((message) => {
     switch (message.event) {

@@ -73,8 +73,9 @@ export class Connection {
     return this.dataCommand({name: 'identify', nickname: nickname})
   }
 
-  async createRoom(name: string) {
-    return this.dataCommand({name: 'create-room', roomName: name})
+  async createRoom() {
+     // TODO(abustany): What do we do for the room name?
+    return this.dataCommand({name: 'create-room', roomName: "name"})
   }
 
   async joinRoom(roomId: string) {
