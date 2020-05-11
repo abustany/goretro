@@ -3,19 +3,32 @@ import React, { useEffect, useRef } from 'react';
 import logo from './WebGLBanner.png';
 import './WebGLBanner.scss';
 
-export default function Banner({onNotDisplayable}) {
-  const canvasRef = useRef(null)
-  const animationRef = useRef(null)
+interface BannerProps {
+  onNotDisplayable: () => void;
+}
 
-  useEffect(() => {
+export default function Banner({onNotDisplayable}: BannerProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const animationRef = useRef<number>(null)
+
+  useEffect((): () => void => {
     animate(canvasRef, animationRef, onNotDisplayable)
-    return () => animationRef.current && cancelAnimationFrame(animationRef.current)
+
+    // The ref value 'animationRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'animationRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { animationRef.current && cancelAnimationFrame(animationRef.current) }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return <canvas ref={canvasRef} className="Banner"/>
 }
 
-function animate(canvasRef, animationRef, notDisplayable) {
+function animate(
+  canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
+  animationRef: React.MutableRefObject<number | null>,
+  notDisplayable: () => void
+): void {
   const image = new Image();
   image.src = logo;
   image.onload = () => {
@@ -23,28 +36,35 @@ function animate(canvasRef, animationRef, notDisplayable) {
   }
 }
 
-function render(canvasRef, animationRef, image, notDisplayable) {
+function render(
+  canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
+  animationRef: React.MutableRefObject<number | null>,
+  image: HTMLImageElement,
+  notDisplayable: () => void
+): void {
   const canvas = canvasRef.current
   // Component has been unmounted already
   if (!canvas) return
 
-  canvas.setAttribute('width', image.width);
-  canvas.setAttribute('height', image.height);
+  canvas.setAttribute('width', image.width.toString());
+  canvas.setAttribute('height', image.height.toString());
 
-  const gl = canvas.getContext('webgl');
+  let gl = canvas.getContext('webgl');
   if (!gl) {
     console.log("WebGL unavailable")
     notDisplayable()
     return
   }
 
-  const program = createProgram(
-    gl,
-    createShader(gl, gl.VERTEX_SHADER, vertexShaderSource),
-    createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource),
-  );
-  if (!program) {
-    console.log("Failed to compile")
+  let program: WebGLProgram
+  try {
+    program = createProgram(
+      gl,
+      createShader(gl, gl.VERTEX_SHADER, vertexShaderSource),
+      createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource),
+    );
+  } catch(err) {
+    console.log(err)
     notDisplayable()
     return
   }
@@ -70,8 +90,9 @@ function render(canvasRef, animationRef, image, notDisplayable) {
 
   animationRef.current = requestAnimationFrame(drawScene);
 
-  function drawScene(now) {
+  function drawScene(now: number): void {
     now *= 0.001;
+    gl = gl as WebGLRenderingContext
 
     gl.viewport(0, 0, image.width, image.height);
     gl.clearColor(0.149, 0.145, 0.141, 1);
@@ -94,8 +115,13 @@ function render(canvasRef, animationRef, image, notDisplayable) {
 
 }
 
-function createShader(gl, type, source) {
-    const shader = gl.createShader(type);
+function createShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
+    let shader = gl.createShader(type);
+    if (!shader) {
+      throw new Error("Failed to create shader")
+    }
+    shader = shader as WebGLShader
+
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
     const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
@@ -105,6 +131,40 @@ function createShader(gl, type, source) {
 
     console.log(gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
+    throw new Error("Failed to get shader params")
+}
+
+function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
+  const program = gl.createProgram();
+  if (!program) {
+    throw new Error("Failed to create program")
+  }
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  const success = gl.getProgramParameter(program, gl.LINK_STATUS);
+  if (success) {
+    return program;
+  }
+
+  console.log(gl.getProgramInfoLog(program));
+  gl.deleteProgram(program);
+  throw new Error("Failed to get program parameter")
+}
+
+function setRectangle(gl: WebGLRenderingContext, x: number, y: number, width: number, height: number): void {
+  const x1 = x;
+  const x2 = x + width;
+  const y1 = y;
+  const y2 = y + height;
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+     x1, y1,
+     x2, y1,
+     x1, y2,
+     x1, y2,
+     x2, y1,
+     x2, y2,
+  ]), gl.STATIC_DRAW);
 }
 
 const vertexShaderSource = `
@@ -251,32 +311,3 @@ void main() {
   mainImage(gl_FragColor, gl_FragCoord.xy*vec2(1, -1));
 }
 `;
-
-function createProgram(gl, vertexShader, fragmentShader) {
-  const program = gl.createProgram();
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  gl.linkProgram(program);
-  const success = gl.getProgramParameter(program, gl.LINK_STATUS);
-  if (success) {
-    return program;
-  }
-
-  console.log(gl.getProgramInfoLog(program));
-  gl.deleteProgram(program);
-}
-
-function setRectangle(gl, x, y, width, height) {
-  const x1 = x;
-  const x2 = x + width;
-  const y1 = y;
-  const y2 = y + height;
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-     x1, y1,
-     x2, y1,
-     x1, y2,
-     x1, y2,
-     x2, y1,
-     x2, y2,
-  ]), gl.STATIC_DRAW);
-}
