@@ -8,14 +8,17 @@ interface BannerProps {
 }
 
 export default function Banner({onNotDisplayable}: BannerProps) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const animationRef = useRef<number | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const animationRef = useRef<number>(null)
 
   useEffect((): () => void => {
     animate(canvasRef, animationRef, onNotDisplayable)
-    // eslint-disable-next-line
+
+    // The ref value 'animationRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'animationRef.current' to a variable inside the effect, and use that variable in the cleanup function.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => { animationRef.current && cancelAnimationFrame(animationRef.current) }
-    // eslint-disable-next-line
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return <canvas ref={canvasRef} className="Banner"/>
