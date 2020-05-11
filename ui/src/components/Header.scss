@@ -1,4 +1,34 @@
 .Header {
-  margin-top: 3em;
-  text-align: center;
+  padding: 1.5rem;
+
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.Header__title {
+  h1 {
+    margin: 0;
+  }
+}
+
+.Header__side {
+  width: 10rem;
+}
+
+.Header__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
+@media (max-width: 800px) {
+  .Header__left {
+    display: none;
+  }
+  .Header__name {
+    margin-left: 1rem;
+  }
 }
