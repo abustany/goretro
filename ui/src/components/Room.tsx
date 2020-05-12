@@ -63,9 +63,9 @@ export default function Room({room, link, isAdmin, onNoteCreate, onStateTransiti
     </div> }
 
     <div className={`Room__footer center-form`}>
-      { isWaiting && joinInvitationComponent() }
-
       { participantsListComponent() }
+
+      { isWaiting && joinInvitationComponent() }
 
       { isAdmin && stateControlComponent() }
     </div>
