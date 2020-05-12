@@ -3,7 +3,7 @@ exports.config = {
   helpers: {
     Playwright: {
       url: 'http://localhost:3000',
-      show: true,
+      show: !process.env.CI,
       browser: 'chromium'
     }
   },

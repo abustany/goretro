@@ -13,14 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup cache
-        uses: actions/cache@v1
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.14.2'
@@ -28,6 +20,26 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '12'
+
+      - name: Setup Go cache
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Setup Yarn cache
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: Run backend tests
         run: go test -v ./...
@@ -37,6 +49,9 @@ jobs:
         with:
           version: v1.26
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run end to end tests
+        run: ./run-integration-tests.sh
 
       # We also build the Docker image for PRs, since we want to check those
       # don't break the build. We just don't push it.
