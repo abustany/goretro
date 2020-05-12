@@ -112,10 +112,18 @@ func (r *Retro) AddParticipant(newParticipant Participant) []Event {
 		r.hostID = newParticipant.ClientID
 	}
 
+	var payload interface{}
+
+	if r.state != ActionPoints {
+		payload = r.serializeForClientLocked(newParticipant.ClientID)
+	} else {
+		payload = r.serializeLocked()
+	}
+
 	events = append(events, Event{
 		Recipient: newParticipant.ClientID,
 		Name:      currentStateEventName,
-		Payload:   r.serializeForClientLocked(newParticipant.ClientID),
+		Payload:   payload,
 	})
 
 	return events
