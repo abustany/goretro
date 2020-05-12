@@ -28,9 +28,10 @@ export default function Login({onNameSet}: LoginProps) {
         onChange={(e) => setName(e.target.value)}
         value={name}
         onKeyDown={(e) => { e.key === 'Enter' && handleSetName() }}
+        data-test-id="login-nickname"
       />
 
-      <button onClick={handleSetName}>Let me in!</button>
+      <button data-test-id="login-submit" onClick={handleSetName}>Let me in!</button>
     </div>
   </div>
 }

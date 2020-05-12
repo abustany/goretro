@@ -23,7 +23,8 @@ export default function NoteEditor({onNoteCreate}: NoteEditorProps) {
       onChange={(e) => setNote(e.target.value) }
       value={note}
       className="NoteEditor"
+      data-test-id="noteeditor-text"
     />
-    <button onClick={handleCreate}>Add</button>
+    <button data-test-id="noteeditor-add" onClick={handleCreate}>Add</button>
   </div>
 }

@@ -34,7 +34,7 @@ export default function Room({room, link, isAdmin, onNoteCreate, onStateTransiti
 
   const participantsListComponent = () => <div>
     <h2>Participants</h2>
-    <ul>{ Array.from(participants.values()).map(el => <li key={el.clientId}>{el.name}</li> ) }</ul>
+    <ul>{ Array.from(participants.values()).map(el => <li data-test-id="room-participant-list-item" key={el.clientId}>{el.name}</li> ) }</ul>
   </div>
 
   const joinInvitationComponent = () => <div>
@@ -43,8 +43,8 @@ export default function Room({room, link, isAdmin, onNoteCreate, onStateTransiti
   </div>
 
   const stateControlComponent = () => {
-    if (isWaiting) return <div className="centered-col-300"><button onClick={onStateTransition}>Start</button></div>
-    if (isRunning) return <div className="centered-col-300"><button onClick={onStateTransition}>Close &amp; Review</button></div>
+    if (isWaiting) return <div className="centered-col-300"><button data-test-id="room-start" onClick={onStateTransition}>Start</button></div>
+    if (isRunning) return <div className="centered-col-300"><button data-test-id="room-close" onClick={onStateTransition}>Close &amp; Review</button></div>
     return null
   }
 
@@ -58,6 +58,7 @@ export default function Room({room, link, isAdmin, onNoteCreate, onStateTransiti
           participants={participants}
           notes={ notesByMood(mood) }
           onNoteCreate={ onNoteCreateHandler(onNoteCreate, mood) }
+          data-test-id={ "room-column-" + types.Mood[mood].toLowerCase() }
         />
       ) }
     </div> }
