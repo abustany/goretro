@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@types/chai": "^4.2.11",
+    "chai": "^4.2.0",
+    "codeceptjs": "^2.6.3",
+    "playwright": "^0.12.1",
+    "ts-node": "^8.10.1",
+    "typescript": "^3.8.3"
+  }
+}
