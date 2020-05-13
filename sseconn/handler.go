@@ -1,9 +1,6 @@
 package sseconn
 
 import (
-	"bytes"
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -39,111 +36,6 @@ var (
 	errInvalidConnState    = errors.New("Invalid connection state")
 	errEventBufferFull     = errors.New("Event buffer full")
 )
-
-// Client Connection
-
-type clientConnState int
-
-const (
-	helloReceived clientConnState = iota + 1
-	eventsOpen
-)
-
-type clientConn struct {
-	state     clientConnState
-	clientID  ClientID
-	secret    ClientSecret
-	eventChan chan interface{}
-	listeners []chan json.RawMessage
-}
-
-// ClientID
-
-type ClientID [clientIDLength]byte
-
-func ClientIDFromString(s string) (ClientID, error) {
-	var c ClientID
-
-	data, err := base64.URLEncoding.DecodeString(s)
-	if err != nil || len(data) != clientIDLength {
-		return c, errInvalidClientID
-	}
-
-	copy(c[:], data)
-	return c, nil
-}
-
-func NewClientID() (ClientID, error) {
-	var res ClientID
-	_, err := rand.Read(res[:])
-	return res, err
-}
-
-func (c ClientID) String() string {
-	return base64.URLEncoding.EncodeToString(c[:])
-}
-
-func (c ClientID) MarshalJSON() ([]byte, error) {
-	return json.Marshal(c.String())
-}
-
-func (c ClientID) MarshalText() ([]byte, error) {
-	return []byte(c.String()), nil
-}
-
-func (c ClientID) IsZero() bool {
-	var zero ClientID
-	return bytes.Equal(zero[:], c[:])
-}
-
-// ClientSecret
-
-type ClientSecret [clientSecretLength]byte
-
-func ClientSecretFromString(s string) (ClientSecret, error) {
-	var c ClientSecret
-
-	data, err := base64.URLEncoding.DecodeString(s)
-	if err != nil || len(data) != clientSecretLength {
-		return c, errInvalidClientSecret
-	}
-
-	copy(c[:], data)
-	return c, nil
-}
-
-func (c ClientSecret) String() string {
-	return base64.URLEncoding.EncodeToString(c[:])
-}
-
-// Commands
-
-type command struct {
-	Name     string `json:"name"`
-	ClientID string `json:"clientId"`
-	Secret   string `json:"secret"`
-}
-
-const helloCommandName = "hello"
-
-type helloResult struct {
-	EventsURL string `json:"eventsUrl"`
-}
-
-const dataCommandName = "data"
-
-type dataCommand struct {
-	command
-	Payload json.RawMessage `json:"payload"`
-}
-
-type dataResult struct {
-}
-
-type eventData struct {
-	Event   string      `json:"event"`
-	Payload interface{} `json:"payload,omitempty"`
-}
 
 // Handler
 
