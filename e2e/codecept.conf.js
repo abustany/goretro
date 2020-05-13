@@ -4,7 +4,7 @@ exports.config = {
     Playwright: {
       url: 'http://localhost:3000',
       show: !process.env.CI,
-      browser: 'chromium'
+      browser: process.env.BROWSER || 'chromium'
     }
   },
   plugins: {
