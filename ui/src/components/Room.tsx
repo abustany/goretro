@@ -52,7 +52,7 @@ export default function Room({room, participantId, link, onNoteCreate, onStateTr
   const notesByMood = (mood: types.Mood) => room.notes.filter((n) => n.mood === mood)
 
   const participantsListComponent = () => <div>
-    <h2 className="Room__footer-section">Online ({ participants.size })</h2>
+    <h2 className="section-topmargin">Online ({ participants.size })</h2>
     <ul>{ Array.from(participants.values()).map(el => {
       let badgesArr = []
       if (el.clientId === participantId) badgesArr.push(flagComponent('YOU'))
@@ -63,19 +63,19 @@ export default function Room({room, participantId, link, onNoteCreate, onStateTr
   </div>
 
   const joinInvitationComponent = () => <div>
-    <h2 className="Room__footer-section">Invite participants!</h2>
+    <h2 className="section-topmargin">Invite participants!</h2>
     <span>{link}</span>
   </div>
 
   const statusAdminComponent = () => {
-    return <div className="Room__footer-section">
+    return <div className="section-topmargin">
       { hostButton() }
       <p className="Room__status">{ stateDescriptionAdmin[room.state] }</p>
     </div>
   }
 
   const statusParticipantComponent = () => {
-    return <div className="Room__footer-section">
+    return <div className="section-topmargin">
       <h2>▼</h2>
       <div className="Room__status">{ stateDescriptionParticipant[room.state] }</div>
     </div>
@@ -89,7 +89,7 @@ export default function Room({room, participantId, link, onNoteCreate, onStateTr
     </div>
   }
 
-  return <div className="Room">
+  return <div className="Room section-topmargin">
     { !isWaiting && <div className="Room__columns">
       { [types.Mood.POSITIVE, types.Mood.NEGATIVE, types.Mood.CONFUSED].map((mood, index) =>
         <Column

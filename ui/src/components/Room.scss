@@ -7,6 +7,7 @@
 .Room__columns {
   display: flex;
   justify-content: space-between;
+  align-content: stretch;
 
   width: 100%;
 }
@@ -52,10 +53,6 @@
 
 .Room__flag-pointer {
   padding-left: 10px;
-}
-
-.Room__footer-section {
-  margin-top: 3rem;
 }
 
 .Room__status {

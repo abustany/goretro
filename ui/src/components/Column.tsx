@@ -21,13 +21,14 @@ export default function Column({editable, icon, notes, participants, onNoteCreat
   return <div className='Column center-form' {...rest}>
     <h2>{icon}</h2>
 
-    <div className='Column__Notes'>
-      { notesComponent }
+    { notesComponent }
 
-      { editable && <NoteEditor
-        onNoteCreate={onNoteCreate}
-        tabIndex={tabIndex}
-      />}
-    </div>
+    { editable && <NoteEditor
+      onNoteCreate={onNoteCreate}
+      tabIndex={tabIndex}
+      submitLabel={"↵"}
+    />}
   </div>
 }
+
+// ⏎ ↵ …

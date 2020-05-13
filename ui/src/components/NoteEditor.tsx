@@ -5,10 +5,14 @@ import './NoteEditor.scss'
 interface NoteEditorProps {
   onNoteCreate: (text: string) => void;
   tabIndex: number
+  submitLabel?: string;
 }
 
-export default function NoteEditor({onNoteCreate, tabIndex}: NoteEditorProps) {
+const defaultSubmitLabel = "Add"
+
+export default function NoteEditor({onNoteCreate, tabIndex, submitLabel}: NoteEditorProps) {
   const [note, setNote] = useState("")
+  if (!submitLabel) submitLabel = defaultSubmitLabel
   const textArea = useRef<HTMLTextAreaElement>(null);
 
   const handleCreate = function() {
@@ -33,7 +37,8 @@ export default function NoteEditor({onNoteCreate, tabIndex}: NoteEditorProps) {
       className="NoteEditor"
       tabIndex={tabIndex}
       data-test-id="noteeditor-text"
+      placeholder="…"
     />
-    <button data-test-id="noteeditor-add" onClick={handleCreate}>Add</button>
+    <button onClick={handleCreate} data-test-id="noteeditor-add">{submitLabel}</button>
   </div>
 }
