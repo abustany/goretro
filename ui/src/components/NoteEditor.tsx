@@ -4,9 +4,10 @@ import './NoteEditor.scss'
 
 interface NoteEditorProps {
   onNoteCreate: (text: string) => void;
+  tabIndex?: number
 }
 
-export default function NoteEditor({onNoteCreate}: NoteEditorProps) {
+export default function NoteEditor({onNoteCreate, tabIndex}: NoteEditorProps) {
   const [note, setNote] = useState("")
   const textArea = useRef<HTMLTextAreaElement>(null);
 
@@ -30,6 +31,7 @@ export default function NoteEditor({onNoteCreate}: NoteEditorProps) {
       onKeyDown={onMetaEnter(handleCreate)}
       value={note}
       className="NoteEditor"
+      tabIndex={tabIndex}
       data-test-id="noteeditor-text"
     />
     <button data-test-id="noteeditor-add" onClick={handleCreate}>Add</button>
