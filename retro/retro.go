@@ -6,35 +6,6 @@ import (
 	"github.com/abustany/goretro/sseconn"
 )
 
-type State int
-
-const (
-	WaitingForParticipants State = iota + 1
-	Running
-	ActionPoints
-)
-
-type Mood int
-
-const (
-	PositiveMood Mood = iota + 1
-	NegativeMood
-	ConfusedMood
-)
-
-type Participant struct {
-	ClientID        sseconn.ClientID `json:"clientId"`
-	Name            string           `json:"name"`
-	FinishedWriting bool             `json:"finishedWriting,omitempty"`
-}
-
-type Note struct {
-	ID       uint             `json:"id"`
-	AuthorID sseconn.ClientID `json:"authorId"`
-	Text     string           `json:"text"`
-	Mood     Mood             `json:"mood"`
-}
-
 type Retro struct {
 	sync.Mutex
 	id           sseconn.ClientID
@@ -43,12 +14,6 @@ type Retro struct {
 	hostID       sseconn.ClientID // ID of the room "admin"
 	participants []Participant
 	notes        map[sseconn.ClientID][]Note
-}
-
-type Event struct {
-	Recipient sseconn.ClientID
-	Name      string // type of the event
-	Payload   interface{}
 }
 
 type SerializedRetro struct {
@@ -68,15 +33,6 @@ func NewRetro(id sseconn.ClientID, name string) *Retro {
 		notes: make(map[sseconn.ClientID][]Note),
 	}
 }
-
-const (
-	participantAddedEventName   = "participant-added"
-	participantRemovedEventName = "participant-removed"
-	participantUpdatedEventName = "participant-updated"
-	currentStateEventName       = "current-state"
-	hostChangedEventName        = "host-changed"
-	stateChangedEventName       = "state-changed"
-)
 
 func (r *Retro) AddParticipant(newParticipant Participant) []Event {
 	r.Lock()

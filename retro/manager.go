@@ -11,6 +11,13 @@ import (
 	"github.com/abustany/goretro/sseconn"
 )
 
+type Manager struct {
+	lock        sync.RWMutex
+	connManager ConnManager
+	retros      map[sseconn.ClientID]*Retro
+	clientInfo  map[sseconn.ClientID]clientInfo
+}
+
 type ConnManager interface {
 	ListenConnections() <-chan sseconn.ClientID
 	Listen(clientID sseconn.ClientID) (<-chan json.RawMessage, error)
@@ -20,65 +27,6 @@ type ConnManager interface {
 type clientInfo struct {
 	name  string
 	retro *Retro
-}
-
-// Commands
-
-type command struct {
-	Name string `json:"name"`
-}
-
-const createRoomCommandName = `create-room`
-
-type createRoomCommand struct {
-	command
-	RoomName string `json:"roomName"`
-}
-
-const joinRoomCommandName = `join-room`
-
-type joinRoomCommand struct {
-	command
-	RoomID string `json:"roomId"`
-}
-
-const identifyCommandName = `identify`
-
-type identifyCommand struct {
-	command
-	Nickname string `json:"nickname"`
-}
-
-const setStateCommandName = `set-state`
-
-type setStateCommand struct {
-	command
-	State uint `json:"state"`
-}
-
-const saveNoteCommentName = `save-note`
-
-type saveNoteCommand struct {
-	command
-	ID   uint   `json:"noteId"`
-	Text string `json:"text"`
-	Mood uint   `json:"mood"`
-}
-
-const setFinishedWritingName = `set-finished-writing`
-
-type setFinishedWritingCommand struct {
-	command
-	Finished bool `json:"finished"`
-}
-
-// Manager
-
-type Manager struct {
-	lock        sync.RWMutex
-	connManager ConnManager
-	retros      map[sseconn.ClientID]*Retro
-	clientInfo  map[sseconn.ClientID]clientInfo
 }
 
 func NewManager(connManager ConnManager) *Manager {
@@ -323,25 +271,5 @@ func (m *Manager) dispatchEvents(events []Event) {
 		if err := m.connManager.Send(ev.Recipient, ev.Name, ev.Payload); err != nil {
 			log.Printf("error dispatching event to %s: %s", ev.Recipient, err)
 		}
-	}
-}
-
-//
-
-func moodFromInt(i uint) (Mood, error) {
-	switch i {
-	case uint(PositiveMood), uint(NegativeMood), uint(ConfusedMood):
-		return Mood(i), nil
-	default:
-		return 0, fmt.Errorf("invalid value: %d", i)
-	}
-}
-
-func stateFromInt(i uint) (State, error) {
-	switch i {
-	case uint(WaitingForParticipants), uint(Running), uint(ActionPoints):
-		return State(i), nil
-	default:
-		return 0, fmt.Errorf("invalid value: %d", i)
 	}
 }
