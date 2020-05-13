@@ -13,6 +13,7 @@ export interface Room {
   state: RoomState;
   participants: Participant[];
   notes: Note[];
+  hostId: string;
 }
 
 export enum Mood {
@@ -59,6 +60,9 @@ export type Action = {
 } | {
   type: 'roomParticipantAdd';
   payload: Participant;
+} | {
+  type: 'hostChange';
+  payload: string; // host clientId
 } | {
   type: 'roomStateChanged';
   payload: RoomState;

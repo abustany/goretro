@@ -14,15 +14,7 @@ export default function Header({name}: Props) {
   let banner;
   if (name || webGLDisabled) {
     banner = <div className="Header">
-      <div className="Header__left Header__side"></div>
-
-      <div className="Header__title">
-        <h1 className="retro-font">Goretro</h1>
-      </div>
-
-      <div className="Header__name Header__side">
-        {name}
-      </div>
+      <h1 className="retro-font">Goretro</h1>
     </div>
   } else {
     banner = <WebGLBanner onNotDisplayable={() => { setWebGLDisabled(true) }}/>
