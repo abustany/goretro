@@ -35,7 +35,6 @@ export interface State {
   name?: string;
   identified: boolean;
   roomId?: string;
-  roomAdmin: boolean;
   room?: Room;
 }
 

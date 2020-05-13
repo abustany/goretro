@@ -57,7 +57,6 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
     room={state.room}
     participantId={connection.clientId}
     link={window.location.toString()}
-    isAdmin={state.roomAdmin}
     onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
     onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
   />
@@ -134,7 +133,6 @@ function readRoomIdFromURL(dispatch: Dispatch<types.Action>): void {
 const initialState: types.State = {
   connected: false,
   identified: false,
-  roomAdmin: true,
 }
 
 function reducer(state: types.State, action: types.Action): types.State {
@@ -149,7 +147,7 @@ function reducer(state: types.State, action: types.Action): types.State {
       return {...state, identified: action.payload}
 
     case 'roomIdSetFromURL':
-      return {...state, roomAdmin: false, roomId: action.payload}
+      return {...state, roomId: action.payload}
     case 'roomReceive':
       return {...state, room: action.payload}
     case 'roomParticipantAdd':

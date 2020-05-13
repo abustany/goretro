@@ -12,7 +12,6 @@ interface RoomProps {
   room: types.Room;
   participantId: string;
   link: string;
-  isAdmin: boolean;
   onNoteCreate: OnNoteCreateCallback;
   onStateTransition: () => void;
 }
@@ -45,8 +44,9 @@ function onNoteCreateHandler(callback: OnNoteCreateCallback, mood: types.Mood): 
   return (text) => callback(mood, text);
 }
 
-export default function Room({room, participantId, link, isAdmin, onNoteCreate, onStateTransition}: RoomProps) {
+export default function Room({room, participantId, link, onNoteCreate, onStateTransition}: RoomProps) {
   const participants = normalizeParticipants(room.participants)
+  const isAdmin = participantId === room.hostId
   const isWaiting = room.state === types.RoomState.WAITING_FOR_PARTICIPANTS
   const isRunning = room.state === types.RoomState.RUNNING
   const notesByMood = (mood: types.Mood) => room.notes.filter((n) => n.mood === mood)
@@ -69,7 +69,7 @@ export default function Room({room, participantId, link, isAdmin, onNoteCreate, 
 
   const statusAdminComponent = () => {
     return <div className="Room__footer-section">
-      { adminButton() }
+      { hostButton() }
       <p className="Room__status">{ stateDescriptionAdmin[room.state] }</p>
     </div>
   }
@@ -81,7 +81,7 @@ export default function Room({room, participantId, link, isAdmin, onNoteCreate, 
     </div>
   }
 
-  const adminButton = () => {
+  const hostButton = () => {
     const btn = nextButton[room.state]
     if (!btn) return null
     return <div className="centered-col-300">
