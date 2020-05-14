@@ -130,9 +130,24 @@ function readRoomIdFromURL(dispatch: Dispatch<types.Action>): void {
 
 // State
 
+// const initialState: types.State = {
+//   connected: false,
+//   identified: false,
+// }
+
+// TMP
 const initialState: types.State = {
   connected: false,
   identified: false,
+  name: "Charles",
+  room: {
+    state: 2,
+    hostId: "111",
+    notes: [{authorId: "111", id: 1, text: "hey", mood: 2}],
+    participants: [
+      {name: "Charles", clientId: "111"}
+    ]
+  }
 }
 
 function reducer(state: types.State, action: types.Action): types.State {
