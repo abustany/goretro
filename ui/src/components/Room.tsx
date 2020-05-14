@@ -6,17 +6,8 @@ import Column from './Column'
 import './Room.scss'
 import '../stylesheets/utils.scss'
 
-type OnNoteCreateCallback = (mood: types.Mood, text: string) => void;
 
-interface RoomProps {
-  room: types.Room;
-  participantId: string;
-  link: string;
-  onNoteCreate: OnNoteCreateCallback;
-  onStateTransition: () => void;
-}
-
-const MoodIcons = {
+const moodIcons = {
   [types.Mood.POSITIVE]: "👍",
   [types.Mood.NEGATIVE]: "👎",
   [types.Mood.CONFUSED]: "🤔",
@@ -40,8 +31,14 @@ const stateDescriptionAdmin = {
   [types.RoomState.REVIEWING]: stateDescriptionParticipant[types.RoomState.REVIEWING],
 }
 
-function onNoteCreateHandler(callback: OnNoteCreateCallback, mood: types.Mood): (text: string) => void {
-  return (text) => callback(mood, text);
+type OnNoteCreateCallback = (mood: types.Mood, text: string) => void;
+
+interface RoomProps {
+  room: types.Room;
+  participantId: string;
+  link: string;
+  onNoteCreate: OnNoteCreateCallback;
+  onStateTransition: () => void;
 }
 
 export default function Room({room, participantId, link, onNoteCreate, onStateTransition}: RoomProps) {
@@ -49,7 +46,7 @@ export default function Room({room, participantId, link, onNoteCreate, onStateTr
   const isAdmin = participantId === room.hostId
   const isWaiting = room.state === types.RoomState.WAITING_FOR_PARTICIPANTS
   const isRunning = room.state === types.RoomState.RUNNING
-  const notesByMood = (mood: types.Mood) => room.notes.filter((n) => n.mood === mood)
+  const notesByMood = sortNotesByMoods(room.notes)
 
   const participantsListComponent = () => <div>
     <h2 className="section-topmargin">Online ({ participants.size })</h2>
@@ -94,11 +91,11 @@ export default function Room({room, participantId, link, onNoteCreate, onStateTr
       { [types.Mood.POSITIVE, types.Mood.NEGATIVE, types.Mood.CONFUSED].map((mood, index) =>
         <Column
           key={mood}
-          icon={ MoodIcons[mood] }
+          icon={ moodIcons[mood] }
           editable={isRunning}
           participants={participants}
-          notes={ notesByMood(mood) }
-          onNoteCreate={ onNoteCreateHandler(onNoteCreate, mood) }
+          notes={ notesByMood[mood] }
+          onNoteCreate={ (text) => onNoteCreate(mood, text) }
           data-test-id={ "room-column-" + types.Mood[mood].toLowerCase() }
           tabIndex={index + 1}
         />
@@ -113,6 +110,18 @@ export default function Room({room, participantId, link, onNoteCreate, onStateTr
       { isAdmin ? statusAdminComponent() : statusParticipantComponent() }
     </div>
   </div>
+}
+
+function sortNotesByMoods(notes: types.Note[]): { [key: number]: types.Note[] } {
+  const notesByMood: { [key: number]: types.Note[] } = {
+    [types.Mood.POSITIVE]: [],
+    [types.Mood.NEGATIVE]: [],
+    [types.Mood.CONFUSED]: [],
+  }
+  for (const note of notes) {
+    notesByMood[note.mood].push(note)
+  }
+  return notesByMood
 }
 
 function normalizeParticipants(arr: types.Participant[]): Map<string, types.Participant> {
