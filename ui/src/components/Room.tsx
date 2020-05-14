@@ -91,7 +91,7 @@ export default function Room({room, participantId, link, isAdmin, onNoteCreate, 
 
   return <div className="Room">
     { !isWaiting && <div className="Room__columns">
-      { [types.Mood.POSITIVE, types.Mood.NEGATIVE, types.Mood.CONFUSED].map(mood =>
+      { [types.Mood.POSITIVE, types.Mood.NEGATIVE, types.Mood.CONFUSED].map((mood, index) =>
         <Column
           key={mood}
           icon={ MoodIcons[mood] }
@@ -100,6 +100,7 @@ export default function Room({room, participantId, link, isAdmin, onNoteCreate, 
           notes={ notesByMood(mood) }
           onNoteCreate={ onNoteCreateHandler(onNoteCreate, mood) }
           data-test-id={ "room-column-" + types.Mood[mood].toLowerCase() }
+          tabIndex={index + 1}
         />
       ) }
     </div> }

@@ -4,9 +4,10 @@ import './NoteEditor.scss'
 
 interface NoteEditorProps {
   onNoteCreate: (text: string) => void;
+  tabIndex: number
 }
 
-export default function NoteEditor({onNoteCreate}: NoteEditorProps) {
+export default function NoteEditor({onNoteCreate, tabIndex}: NoteEditorProps) {
   const [note, setNote] = useState("")
   const textArea = useRef<HTMLTextAreaElement>(null);
 
@@ -17,12 +18,20 @@ export default function NoteEditor({onNoteCreate}: NoteEditorProps) {
     textArea.current?.focus()
   }
 
+  const onMetaEnter = (fn: (e: React.KeyboardEvent) => any) => {
+    return (e: React.KeyboardEvent) => {
+      if (e.keyCode === 13 && (e.metaKey || e.ctrlKey)) fn(e)
+    }
+  }
+
   return <div>
     <textarea
       ref={textArea}
       onChange={(e) => setNote(e.target.value) }
+      onKeyDown={onMetaEnter(handleCreate)}
       value={note}
       className="NoteEditor"
+      tabIndex={tabIndex}
       data-test-id="noteeditor-text"
     />
     <button data-test-id="noteeditor-add" onClick={handleCreate}>Add</button>

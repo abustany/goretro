@@ -12,9 +12,10 @@ interface ColumnProps {
   notes: types.Note[];
   participants: Map<string, types.Participant>;
   onNoteCreate: (text: string) => void;
+  tabIndex: number;
 }
 
-export default function Column({editable, icon, notes, participants, onNoteCreate, ...rest}: ColumnProps) {
+export default function Column({editable, icon, notes, participants, onNoteCreate, tabIndex, ...rest}: ColumnProps) {
   const notesComponent = notes.map((n) => <Note key={n.authorId + n.id} note={n} showAuthor={!editable} participants={participants}/>)
 
   return <div className='Column center-form' {...rest}>
@@ -25,6 +26,7 @@ export default function Column({editable, icon, notes, participants, onNoteCreat
 
       { editable && <NoteEditor
         onNoteCreate={onNoteCreate}
+        tabIndex={tabIndex}
       />}
     </div>
   </div>
