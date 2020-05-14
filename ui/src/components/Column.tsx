@@ -16,51 +16,29 @@ interface ColumnProps {
 }
 
 export default function Column({editable, icon, notes, participants, onNoteSave, tabIndex, ...rest}: ColumnProps) {
-  const [editedNote, setEditedNote] = useState<types.Note | null>(null)
-
-  console.log("editedNote")
-  console.log(editedNote)
-
-  const handleEdit = (note: types.Note) => {
-    console.log("here :)")
-    setEditedNote(note)
-  }
-
   const notesComponent = notes.map((n) => <Note
       key={n.authorId + n.id}
+
       note={n}
-      showAuthor={!editable}
+      editable={editable}
       participants={participants}
-      onNoteEdit={handleEdit}
+      onNoteSave={onNoteSave}
   />)
 
-  // TODO: Later: It's enough to save the note.
-  const handleCancelEdit = () => {
-    setEditedNote(null)
-  }
+  if (editable) {
+    notesComponent.push(<Note
+      key="editor"
 
-  const handleNoteSave = (text: string) => {
-    let noteId
-    if (editedNote) noteId = editedNote.id
-    onNoteSave(text, noteId)
-    setEditedNote(null)
+      editable={editable}
+      participants={participants}
+      onNoteSave={onNoteSave}
+    />)
   }
 
   return <div className='Column' {...rest}>
-    <div className="Column__top">
-      <h2>{icon}</h2>
+    <h2>{icon}</h2>
 
-      { notesComponent }
-    </div>
-
-    <div className="Column__bottom">
-      { editable && <NoteEditor
-        onNoteSave={handleNoteSave}
-        tabIndex={tabIndex}
-        submitLabel={"↵"}
-        initialValue={editedNote?.text}
-      />}
-    </div>
+    { notesComponent }
   </div>
 }
 

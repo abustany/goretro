@@ -57,7 +57,7 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
     room={state.room}
     userClientId={connection.clientId}
     link={window.location.toString()}
-    onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
+    onNoteSave={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
     onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
   />
 }
@@ -143,7 +143,10 @@ const initialState: types.State = {
   room: {
     state: 2,
     hostId: "111",
-    notes: [{authorId: "111", id: 1, text: "hey", mood: 2}],
+    notes: [
+      {authorId: "111", id: 1, text: "Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out print, graphic or web designs. The passage is attributed to an unknown typesetter in the 15th century who is thought to have scrambled parts of Cicero's De Finibus Bonorum. Lorem ipsum, or lips", mood: 2},
+      {authorId: "111", id: 2, text: "Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out print, graphic or web designs. The passage is attributed to an unknown typesetter in the 15th century who is thought to have scrambled parts of Cicero's De Finibus Bonorum.", mood: 2},
+    ],
     participants: [
       {name: "Charles", clientId: "111"}
     ]

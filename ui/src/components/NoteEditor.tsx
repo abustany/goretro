@@ -11,10 +11,8 @@ interface NoteEditorProps {
 
 const defaultSubmitLabel = "Add"
 
-export default function NoteEditor({onNoteSave, tabIndex, submitLabel, initialValue}: NoteEditorProps) {
-  console.log("Initial value: ")
-  console.log(initialValue)
-  const [note, setNote] = useState(initialValue || "")
+export default function NoteEditor({onNoteSave, tabIndex, submitLabel}: NoteEditorProps) {
+  const [note, setNote] = useState("")
 
   console.log("state")
   console.log(note)

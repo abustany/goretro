@@ -8,24 +8,14 @@
   // Inner
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-}
+  justify-content: flex-start;
 
-.Column__top {
   h2 {
     margin: 0;
     text-align: center;
   }
 }
 
-.Column__top > * {
+.Column > * {
   margin-top: 1rem;
-}
-
-.Column__bottom {
-  @extend .center-form;
-}
-
-.Column__bottom {
-  margin-top: 3rem;
 }
