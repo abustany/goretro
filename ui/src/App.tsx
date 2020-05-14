@@ -55,7 +55,7 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
 
   return <Room
     room={state.room}
-    participantId={connection.clientId}
+    userClientId={connection.clientId}
     link={window.location.toString()}
     onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
     onStateTransition={() => { handleRoomStateIncrement(connection, state) }}

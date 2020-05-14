@@ -35,15 +35,15 @@ type OnNoteCreateCallback = (mood: types.Mood, text: string) => void;
 
 interface RoomProps {
   room: types.Room;
-  participantId: string;
+  userClientId: string;
   link: string;
   onNoteCreate: OnNoteCreateCallback;
   onStateTransition: () => void;
 }
 
-export default function Room({room, participantId, link, onNoteCreate, onStateTransition}: RoomProps) {
+export default function Room({room, userClientId, link, onNoteCreate, onStateTransition}: RoomProps) {
   const participants = normalizeParticipants(room.participants)
-  const isAdmin = participantId === room.hostId
+  const isAdmin = userClientId === room.hostId
   const isWaiting = room.state === types.RoomState.WAITING_FOR_PARTICIPANTS
   const isRunning = room.state === types.RoomState.RUNNING
   const notesByMood = sortNotesByMoods(room.notes)
@@ -52,7 +52,7 @@ export default function Room({room, participantId, link, onNoteCreate, onStateTr
     <h2 className="section-topmargin">Online ({ participants.size })</h2>
     <ul>{ Array.from(participants.values()).map(el => {
       let badgesArr = []
-      if (el.clientId === participantId) badgesArr.push(flagComponent('YOU'))
+      if (el.clientId === userClientId) badgesArr.push(flagComponent('YOU'))
       if (el.clientId === room.hostId) badgesArr.push(flagComponent('HOST'))
 
       return <li key={el.clientId} data-test-id="room-participant-list-item">{el.name}{badgesArr}</li>
