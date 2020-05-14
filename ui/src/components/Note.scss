@@ -10,6 +10,8 @@
   text-align: justify;
 
   position: relative;
+
+  overflow: hidden;
 }
 
 .Note > p {
@@ -17,15 +19,18 @@
 }
 
 .Note__Author {
-  position: absolute;
-  bottom: -0.3em;
-  right: -0.3em;
+  float: right;
 
-  padding: 0.2em 0.3em;
+  // position: relative;
+  // bottom: 0rem;
+  // right: 0rem;
+
+
   color: $whiteColor;
-
+  padding: 0.2rem 0.3rem;
+  margin: 0.2rem;
   background-color: $redColor;
   border-radius: $radius;
 
-  margin-bottom: 0;
+  // margin-bottom: 0;
 }

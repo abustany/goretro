@@ -11,7 +11,18 @@
   justify-content: space-between;
 }
 
-.Column__top, .Column__bottom {
+.Column__top {
+  h2 {
+    margin: 0;
+    text-align: center;
+  }
+}
+
+.Column__top > * {
+  margin-top: 1rem;
+}
+
+.Column__bottom {
   @extend .center-form;
 }
 
