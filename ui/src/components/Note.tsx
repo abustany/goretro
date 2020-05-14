@@ -14,7 +14,7 @@ export default function noteComponent({note, showAuthor, participants}: NoteProp
   return <div className='Note' key={note.id}>
     {note.text}
 
-    {true && <em className="Note__Author">
+    {showAuthor && <em className="Note__badge">
       {participants.get(note.authorId)?.name || "Unknown author"}
     </em>}
   </div>

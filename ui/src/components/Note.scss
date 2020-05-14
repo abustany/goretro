@@ -9,23 +9,31 @@
   color: $darkColor;
   text-align: justify;
 
-  position: relative;
+  // #badge-positionning
+  // overflow: hidden;
 
-  overflow: hidden;
+  // #badge-positionning-alt
+
 }
 
 .Note > p {
   margin-bottom: 0;
 }
 
-.Note__Author {
-  float: right;
-
+.Note__badge {
+  // #badge-positionning
+  // float: right;
   // position: relative;
-  // bottom: 0rem;
-  // right: 0rem;
+  // top: 0.3rem;
+  // left: 0.3rem;
 
+  // #badge-positionning-alt
+  float: right;
+  position: relative;
+  top: 0.3rem;
+  left: 1rem;
 
+  // Badge style
   color: $whiteColor;
   padding: 0.2rem 0.3rem;
   margin: 0.2rem;
@@ -33,4 +41,14 @@
   border-radius: $radius;
 
   // margin-bottom: 0;
+
+  // #badge-positionning-alt
+  margin-bottom: -0.5rem;
+}
+
+// #badge-positionning-alt
+.Note:after {
+  content: "";
+  clear: both;
+  display: block;
 }
