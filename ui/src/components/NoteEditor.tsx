@@ -3,20 +3,28 @@ import React, { useState, useRef } from 'react';
 import './NoteEditor.scss'
 
 interface NoteEditorProps {
-  onNoteCreate: (text: string) => void;
+  onNoteSave: (text: string) => void;
   tabIndex: number
   submitLabel?: string;
+  initialValue?: string;
 }
 
 const defaultSubmitLabel = "Add"
 
-export default function NoteEditor({onNoteCreate, tabIndex, submitLabel}: NoteEditorProps) {
-  const [note, setNote] = useState("")
+export default function NoteEditor({onNoteSave, tabIndex, submitLabel, initialValue}: NoteEditorProps) {
+  console.log("Initial value: ")
+  console.log(initialValue)
+  const [note, setNote] = useState(initialValue || "")
+
+  console.log("state")
+  console.log(note)
+
+
   if (!submitLabel) submitLabel = defaultSubmitLabel
   const textArea = useRef<HTMLTextAreaElement>(null);
 
   const handleCreate = function() {
-    onNoteCreate(note)
+    onNoteSave(note)
 
     setNote("")
     textArea.current?.focus()

@@ -31,17 +31,15 @@ const stateDescriptionAdmin = {
   [types.RoomState.REVIEWING]: stateDescriptionParticipant[types.RoomState.REVIEWING],
 }
 
-type OnNoteCreateCallback = (mood: types.Mood, text: string) => void;
-
 interface RoomProps {
   room: types.Room;
   userClientId: string;
   link: string;
-  onNoteCreate: OnNoteCreateCallback;
+  onNoteSave: (mood: types.Mood, text: string, id?: number) => void;
   onStateTransition: () => void;
 }
 
-export default function Room({room, userClientId, link, onNoteCreate, onStateTransition}: RoomProps) {
+export default function Room({room, userClientId, link, onNoteSave, onStateTransition}: RoomProps) {
   const participants = normalizeParticipants(room.participants)
   const isAdmin = userClientId === room.hostId
   const isWaiting = room.state === types.RoomState.WAITING_FOR_PARTICIPANTS
@@ -95,7 +93,7 @@ export default function Room({room, userClientId, link, onNoteCreate, onStateTra
           editable={isRunning}
           participants={participants}
           notes={ notesByMood[mood] }
-          onNoteCreate={ (text) => onNoteCreate(mood, text) }
+          onNoteSave={ (text, id) => onNoteSave(mood, text, id) }
           data-test-id={ "room-column-" + types.Mood[mood].toLowerCase() }
           tabIndex={index + 1}
         />
