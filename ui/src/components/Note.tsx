@@ -17,5 +17,7 @@ export default function noteComponent({note, showAuthor, participants}: NoteProp
     {showAuthor && <em className="Note__badge">
       {participants.get(note.authorId)?.name || "Unknown author"}
     </em>}
+
+    {!showAuthor && <button className="Note__badge Note__edit"> ✎ </button>}
   </div>
 }
