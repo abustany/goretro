@@ -4,7 +4,7 @@ import './NoteEditor.scss'
 
 interface NoteEditorProps {
   onNoteCreate: (text: string) => void;
-  tabIndex?: number
+  tabIndex: number
 }
 
 export default function NoteEditor({onNoteCreate, tabIndex}: NoteEditorProps) {

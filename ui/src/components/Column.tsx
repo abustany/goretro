@@ -12,7 +12,7 @@ interface ColumnProps {
   notes: types.Note[];
   participants: Map<string, types.Participant>;
   onNoteCreate: (text: string) => void;
-  tabIndex?: number;
+  tabIndex: number;
 }
 
 export default function Column({editable, icon, notes, participants, onNoteCreate, tabIndex, ...rest}: ColumnProps) {
