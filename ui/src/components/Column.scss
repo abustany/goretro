@@ -1,6 +1,20 @@
 @import "../stylesheets/config.scss";
+@import "../stylesheets/utils.scss";
 
 .Column {
   width: 100%;
   margin: 0.5rem;
+
+  // Inner
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.Column__top, .Column__bottom {
+  @extend .center-form;
+}
+
+.Column__bottom {
+  margin-top: 3rem;
 }

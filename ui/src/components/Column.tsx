@@ -18,16 +18,22 @@ interface ColumnProps {
 export default function Column({editable, icon, notes, participants, onNoteCreate, tabIndex, ...rest}: ColumnProps) {
   const notesComponent = notes.map((n) => <Note key={n.authorId + n.id} note={n} showAuthor={!editable} participants={participants}/>)
 
-  return <div className='Column center-form' {...rest}>
-    <h2>{icon}</h2>
+  return <div className='Column' {...rest}>
+    {/* Top */}
+    <div className="Column__top">
+      <h2>{icon}</h2>
 
-    { notesComponent }
+      { notesComponent }
+    </div>
 
-    { editable && <NoteEditor
-      onNoteCreate={onNoteCreate}
-      tabIndex={tabIndex}
-      submitLabel={"↵"}
-    />}
+    {/* Bottom */}
+    <div className="Column__bottom">
+      { editable && <NoteEditor
+        onNoteCreate={onNoteCreate}
+        tabIndex={tabIndex}
+        submitLabel={"↵"}
+      />}
+    </div>
   </div>
 }
 
