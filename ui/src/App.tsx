@@ -55,6 +55,7 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
 
   return <Room
     room={state.room}
+    participantId={connection.clientId}
     link={window.location.toString()}
     isAdmin={state.roomAdmin}
     onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
@@ -101,6 +102,9 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
         break
       case "participant-added":
         dispatch({type: 'roomParticipantAdd', payload: message.payload})
+        break
+      case "host-changed":
+        dispatch({type: 'hostChange', payload: message.payload})
         break
     }
   });
@@ -161,6 +165,8 @@ function reducer(state: types.State, action: types.Action): types.State {
       }
     case 'roomStateChanged':
       return {...state, room: {...state.room!, state: action.payload}}
+    case 'hostChange':
+      return {...state, room: {...state.room!, hostId: action.payload}}
 
     case 'noteCreated':
       return {

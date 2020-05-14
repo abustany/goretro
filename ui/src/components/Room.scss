@@ -1,7 +1,7 @@
 @import "../stylesheets/config.scss";
 
 .Room {
-  padding: 0 0.5em;
+  padding: 0 0.5rem;
 }
 
 .Room__columns {
@@ -20,28 +20,44 @@
 }
 
 .Room__footer {
-  margin: 2em auto;
+  text-align: center;
 
   h2 {
-    margin-top: 2em;
-    margin-bottom: 0.5em;
+    margin-bottom: 0.5rem;
     color: $redAltColor;
-  }
-
-  button {
-    margin-top: 2em;
   }
 
   ul {
     text-align: left;
     display: inline-block;
     margin: 0 auto;
-    // list-style: none;
+    list-style: none;
     // padding-left: 20px;
     padding-left: 0;
 
-    li {
-      margin-bottom: 0.5em;
+    li:not(:last-child) {
+      margin-bottom: 0.5rem;
+    }
+
+    li:before {
+      content: "►";
+      padding-right: 10px;
     }
   }
+}
+
+.Room__flag {
+  color: $redAltColor;
+}
+
+.Room__flag-pointer {
+  padding-left: 10px;
+}
+
+.Room__footer-section {
+  margin-top: 3rem;
+}
+
+.Room__status {
+  font-style: italic;
 }
