@@ -12,40 +12,38 @@ interface NoteProps {
   tabIndex?: number
 }
 
-// Kept alive if (note.id || "editor") didn't change.
-// Thus, the Create widget is stable, and the Edit widgets are stable as well.
+// If `note` is present, behaves as an Note that can be edited or deleted.
+// Otherwise, behaves as a Note creator that gets empty after edition.
+// `note` is not meant to change over the lifetime.
 export default function Note({note, editable, participants, onNoteSave, tabIndex}: NoteProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [editedText, setEditedText] = useState<string>("")
 
-  const [editState, setEdit] = useState<{editedText?: string, isEditingToggled: boolean}>({editedText: "", isEditingToggled: false})
-  const {editedText, isEditingToggled} = editState
   const isCreate = !note
-  const takeEditedText = isEditingToggled || !note
+  const isInEditMode = editedText !== "" || isCreate
 
   const author = note ? (participants.get(note.authorId)?.name || "Unknown author") : null
 
   // Callbacks
 
   const handleEdit = () => {
-    setEdit({editedText: note!.text, isEditingToggled: true})
+    setEditedText(note!.text)
   }
 
   const handleDelete = () => {
     onNoteSave("", note?.id)
-    setEdit({isEditingToggled: false})
+    setEditedText("")
   }
 
   const handleCancelEdition = () => {
-    setEdit({isEditingToggled: false})
+    setEditedText("")
   }
 
   const handleSave = () => {
     onNoteSave(editedText!, note?.id)
+    setEditedText("")
     if (isCreate) {
-      setEdit({editedText: "", isEditingToggled: false})
       textareaRef.current?.focus()
-    } else {
-      setEdit({...editState, isEditingToggled: false})
     }
   }
 
@@ -59,7 +57,7 @@ export default function Note({note, editable, participants, onNoteSave, tabIndex
 
   // Logic
 
-  const text = takeEditedText ? editedText : note?.text
+  const text = isInEditMode ? editedText : note?.text
 
   const badges = () => {
     if (!editable) {
@@ -68,7 +66,7 @@ export default function Note({note, editable, participants, onNoteSave, tabIndex
       if (isCreate) {
         return saveBadge()
       }
-      if (isEditingToggled) {
+      if (isInEditMode) {
         // reversed because of the float:right.
         return [saveBadge(), cancelBadge(), deleteBadge()]
       } else {
@@ -78,9 +76,9 @@ export default function Note({note, editable, participants, onNoteSave, tabIndex
   }
 
   const container = () => {
-    if (takeEditedText) {
+    if (isInEditMode) {
       return <textarea
-        onChange={ (e) => setEdit({...editState, editedText: e.target.value}) }
+        onChange={ (e) => setEditedText(e.target.value) }
         value={ text }
         ref={ textareaRef }
         onKeyDown={ onMetaEnter(handleSave) }
@@ -106,6 +104,9 @@ function onMetaEnter(fn: (e: React.KeyboardEvent) => any) {
   }
 }
 
-// 🗑 💾✓ ↵
-
-// ⏎ ↵ …␘␡
+// ✎
+// …
+// ✓
+// ✕␘
+// ⏎ ↵ 💾
+// ␡⌫🗑

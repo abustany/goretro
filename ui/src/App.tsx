@@ -13,7 +13,6 @@ import './App.scss'
 
 export default function App(props: {connection: Connection}) {
   const [state, dispatch] = useReducer(reducer, initialState)
-  console.log(state)
 
   useEffect(() => {
     connect(props.connection, dispatch)
