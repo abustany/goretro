@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-import NoteEditor from './NoteEditor'
 import Note from './Note'
 import './Column.scss'
 import '../stylesheets/utils.scss'
@@ -16,7 +15,7 @@ interface ColumnProps {
 }
 
 export default function Column({editable, icon, notes, participants, onNoteSave, tabIndex, ...rest}: ColumnProps) {
-  const notesComponent = notes.map((n) => <Note
+  const noteComponents = notes.filter((n) => n.text !== "").map((n) => <Note
       key={n.authorId + n.id}
 
       note={n}
@@ -26,20 +25,19 @@ export default function Column({editable, icon, notes, participants, onNoteSave,
   />)
 
   if (editable) {
-    notesComponent.push(<Note
+    noteComponents.push(<Note
       key="editor"
 
       editable={editable}
       participants={participants}
       onNoteSave={onNoteSave}
-    />)
+      tabIndex={tabIndex}
+      />)
   }
 
   return <div className='Column' {...rest}>
     <h2>{icon}</h2>
 
-    { notesComponent }
+    { noteComponents }
   </div>
 }
-
-// ⏎ ↵ …

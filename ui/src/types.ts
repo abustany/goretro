@@ -68,4 +68,7 @@ export type Action = {
 } | {
   type: 'noteCreated';
   payload: Note;
+} | {
+  type: 'noteUpdated';
+  payload: {noteId: number, text: string}
 }
