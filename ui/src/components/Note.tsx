@@ -14,37 +14,39 @@ interface NoteProps {
 
 export default function Note({note, editable, participants, onNoteSave, tabIndex}: NoteProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [editState, setEdit] = useState<{editText?: string, beingEdited?: boolean}>({editText: "", beingEdited: false})
-  const {editText, beingEdited} = editState
+
+  const [editState, setEdit] = useState<{textEdited?: string, isEditing: boolean}>({textEdited: "", isEditing: false})
+  const {textEdited, isEditing} = editState
+
   const isCreateEditor = !note
 
-  const textFromEdit = beingEdited || !note
+  const textFromEdit = isEditing || !note // TODO: Wrong
   const author = note ? (participants.get(note.authorId)?.name || "Unknown author") : null
 
   // Callbacks
 
   const handleEdit = () => {
-    setEdit({editText: note!.text, beingEdited: true})
+    setEdit({textEdited: note!.text, isEditing: true})
   }
 
   const handleDelete = () => {
     onNoteSave("", note?.id)
-    setEdit({beingEdited: false})
+    setEdit({isEditing: false})
   }
 
   const handleCancelEdition = () => {
-    setEdit({beingEdited: false})
+    setEdit({isEditing: false})
   }
 
   const handleSave = () => {
-    onNoteSave(editText!, note?.id)
+    onNoteSave(textEdited!, note?.id)
     if (isCreateEditor) {
       // TODO: Find better solution.
       // This is it createEditor
-      setEdit({editText: "", beingEdited: false})
+      setEdit({textEdited: "", isEditing: false})
       textareaRef.current?.focus()
     } else {
-      setEdit({...editState, beingEdited: false})
+      setEdit({...editState, isEditing: false})
     }
   }
 
@@ -52,33 +54,33 @@ export default function Note({note, editable, participants, onNoteSave, tabIndex
 
   const editBadge = () => <button onClick={handleEdit} className="Note__badge Note__edit">✎</button>
   const authorBadge = () => <em className="Note__badge">{ author }</em>
-
-  const saveBadge = () => <button key="save" onClick={handleSave} className="Note__badge"> { note ? "✓" : "↵" } </button>
-  const cancelBadge = () => <button key="cancel" onClick={handleCancelEdition} className="Note__badge"> ␘ </button>
+  const saveBadge = () => <button key="save" onClick={handleSave} className="Note__badge"> { note ? "✓" : "✓" } </button>
+  const cancelBadge = () => <button key="cancel" onClick={handleCancelEdition} className="Note__badge"> ✕ </button>
   const deleteBadge = () => <button key="delete" onClick={handleDelete} className="Note__badge"> ␡ </button>
 
   // Logic
 
-  const text = textFromEdit ? editText : note?.text
+  const text = textFromEdit ? textEdited : note?.text
 
   const badges = () => {
-    if (editable) {
-      if (!note) {
-        return saveBadge()
-      }
-
-      if (beingEdited) {
-        return [saveBadge(), cancelBadge(), deleteBadge()]
+    if (!editable) {
+      return authorBadge()
+    } else {
+      if (isEditing) {
+        if (isCreateEditor) {
+          return saveBadge()
+        } else {
+          // reversed because of the float:right.
+          return [saveBadge(), cancelBadge(), deleteBadge()]
+        }
       } else {
         return editBadge()
       }
-    } else {
-      return authorBadge()
     }
   }
 
   const handleChange = (e: any) => {
-    setEdit({...editState, editText: e.target.value}) // TODO: Why?
+    setEdit({...editState, textEdited: e.target.value}) // TODO: Why?
   }
 
   const content = () => {
@@ -110,6 +112,6 @@ function onMetaEnter(fn: (e: React.KeyboardEvent) => any) {
   }
 }
 
-// 🗑 💾
+// 🗑 💾✓ ↵
 
-// ⏎ ↵ …
+// ⏎ ↵ …␘␡
