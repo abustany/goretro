@@ -3,16 +3,26 @@ import React, { useState, useRef } from 'react';
 import './NoteEditor.scss'
 
 interface NoteEditorProps {
-  onNoteCreate: (text: string) => void;
+  onNoteSave: (text: string) => void;
   tabIndex: number
+  submitLabel?: string;
+  initialValue?: string;
 }
 
-export default function NoteEditor({onNoteCreate, tabIndex}: NoteEditorProps) {
+const defaultSubmitLabel = "Add"
+
+export default function NoteEditor({onNoteSave, tabIndex, submitLabel}: NoteEditorProps) {
   const [note, setNote] = useState("")
+
+  console.log("state")
+  console.log(note)
+
+
+  if (!submitLabel) submitLabel = defaultSubmitLabel
   const textArea = useRef<HTMLTextAreaElement>(null);
 
   const handleCreate = function() {
-    onNoteCreate(note)
+    onNoteSave(note)
 
     setNote("")
     textArea.current?.focus()
@@ -33,7 +43,8 @@ export default function NoteEditor({onNoteCreate, tabIndex}: NoteEditorProps) {
       className="NoteEditor"
       tabIndex={tabIndex}
       data-test-id="noteeditor-text"
+      placeholder="…"
     />
-    <button data-test-id="noteeditor-add" onClick={handleCreate}>Add</button>
+    <button onClick={handleCreate} data-test-id="noteeditor-add">{submitLabel}</button>
   </div>
 }

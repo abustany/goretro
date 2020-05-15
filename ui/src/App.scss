@@ -1,9 +1,10 @@
 @import "stylesheets/config.scss";
 
 .App {
-  height: 100%;
-  overflow-y: scroll;
-
+  padding: 1rem 0;
   background-color: $darkColor;
+  height: 100%;
+  overflow-y: auto;
+
   color: $whiteColor;
 }

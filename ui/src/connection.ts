@@ -108,11 +108,23 @@ function randomID(length: number) {
 }
 
 export function generateClientId(): string {
-  return randomID(CLIENT_ID_LEN);
+  // TODO: Extract
+  const lsKey = "clientid"
+  let clid = localStorage.getItem(lsKey)
+  if (clid) return clid
+  clid = randomID(CLIENT_ID_LEN)
+  localStorage.setItem(lsKey, clid)
+  return clid;
 }
 
 export function generateSecret(): string {
-  return randomID(SECRET_LEN);
+  // TODO: Extract
+  const lsKey = "secret"
+  let clid = localStorage.getItem(lsKey)
+  if (clid) return clid
+  clid = randomID(SECRET_LEN)
+  localStorage.setItem(lsKey, clid)
+  return clid;
 }
 
 async function rawCommand<T>(baseUrl: string, command: unknown): Promise<T> {

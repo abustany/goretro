@@ -7,8 +7,8 @@
 .Room__columns {
   display: flex;
   justify-content: space-between;
-
-  width: 100%;
+  align-content: stretch;
+  // min-height: 600px; // TODO
 }
 
 @media (max-width: 1200px) {
@@ -16,6 +16,7 @@
     display: block;
     margin: auto;
     max-width: 800px;
+    min-height: unset;
   }
 }
 
@@ -52,10 +53,6 @@
 
 .Room__flag-pointer {
   padding-left: 10px;
-}
-
-.Room__footer-section {
-  margin-top: 3rem;
 }
 
 .Room__status {

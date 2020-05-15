@@ -9,23 +9,60 @@
   color: $darkColor;
   text-align: justify;
 
-  position: relative;
+  // #badge-positionning
+  // overflow: hidden;
+
+  // #badge-positionning-alt
+
+  textarea {
+    padding: 0;
+    resize: vertical;
+    font-family: $font;
+    width: 100%;
+    overflow: hidden;
+    // background-color: $whiteWhiteColor;
+  }
 }
 
 .Note > p {
   margin-bottom: 0;
 }
 
-.Note__Author {
-  position: absolute;
-  bottom: -0.3em;
-  right: -0.3em;
+.Note__badge {
+  // #badge-positionning
+  // float: right;
+  // position: relative;
+  // top: 0.3rem;
+  // left: 0.3rem;
 
-  padding: 0.2em 0.3em;
+  // #badge-positionning-alt
+  float: right;
+  position: relative;
+  top: 0.3rem;
+  left: 1rem;
+
+  // Badge style
+  min-width: 3rem;
+  text-align: center;
   color: $whiteColor;
-
+  padding: 0.2rem 0.3rem;
+  margin: 0.2rem;
   background-color: $redColor;
   border-radius: $radius;
 
-  margin-bottom: 0;
+  // margin-bottom: 0;
+
+  // #badge-positionning-alt
+  margin-bottom: -0.5rem;
+}
+
+.Note__edit {
+  padding: 0.2rem 0.7rem;
+}
+
+// #badge-positionning-alt
+.Note:after {
+  content: "";
+  clear: both;
+  display: block;
 }

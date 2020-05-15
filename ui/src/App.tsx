@@ -13,6 +13,7 @@ import './App.scss'
 
 export default function App(props: {connection: Connection}) {
   const [state, dispatch] = useReducer(reducer, initialState)
+  console.log(state)
 
   useEffect(() => {
     connect(props.connection, dispatch)
@@ -55,10 +56,9 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
 
   return <Room
     room={state.room}
-    participantId={connection.clientId}
+    userClientId={connection.clientId}
     link={window.location.toString()}
-    isAdmin={state.roomAdmin}
-    onNoteCreate={(mood, text) => { handleNoteCreate(connection, state, dispatch, mood, text) }}
+    onNoteSave={(mood, text, id) => { handleNoteSave(connection, state, dispatch, mood, text, id) }}
     onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
   />
 }
@@ -74,15 +74,20 @@ function handleRoomStateIncrement(connection: Connection, state: types.State): v
   connection.setRoomState(state.room!.state + 1)
 }
 
-function handleNoteCreate(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>, mood: types.Mood, text: string): void {
-  const note = {
-    authorId: connection.clientId,
-    id: state.room!.notes.length,
-    text: text,
-    mood: mood,
-  };
-  dispatch({type: 'noteCreated', payload: note})
-  connection.saveNote(note.id, note.text, note.mood)
+function handleNoteSave(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>, mood: types.Mood, text: string, id?: number): void {
+  if (id !== undefined) {
+    dispatch({type: 'noteUpdated', payload: {noteId: id, text: text}})
+    connection.saveNote(id, text, mood)
+  } else {
+    const note = {
+      authorId: connection.clientId,
+      id: id || state.room!.notes.length,
+      text: text,
+      mood: mood,
+    }
+    dispatch({type: 'noteCreated', payload: note})
+    connection.saveNote(note.id, note.text, note.mood)
+  }
 }
 
 // Connect the EventSource to the State via Actions.
@@ -122,7 +127,6 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
 
 function readRoomIdFromURL(dispatch: Dispatch<types.Action>): void {
   const roomId = (new URL(window.location.toString())).searchParams.get('roomId')
-  console.log(`roomId: ${roomId}`)
   if (!roomId) {
     return
   }
@@ -134,8 +138,25 @@ function readRoomIdFromURL(dispatch: Dispatch<types.Action>): void {
 const initialState: types.State = {
   connected: false,
   identified: false,
-  roomAdmin: true,
 }
+
+// TMP
+// const initialState: types.State = {
+//   connected: false,
+//   identified: false,
+//   name: "Charles",
+//   room: {
+//     state: 2,
+//     hostId: "111",
+//     notes: [
+//       {authorId: "111", id: 1, text: "Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out print, graphic or web designs. The passage is attributed to an unknown typesetter in the 15th century who is thought to have scrambled parts of Cicero's De Finibus Bonorum. Lorem ipsum, or lips", mood: 2},
+//       {authorId: "111", id: 2, text: "Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out print, graphic or web designs. The passage is attributed to an unknown typesetter in the 15th century who is thought to have scrambled parts of Cicero's De Finibus Bonorum.", mood: 2},
+//     ],
+//     participants: [
+//       {name: "Charles", clientId: "111"}
+//     ]
+//   }
+// }
 
 function reducer(state: types.State, action: types.Action): types.State {
   switch (action.type) {
@@ -149,7 +170,7 @@ function reducer(state: types.State, action: types.Action): types.State {
       return {...state, identified: action.payload}
 
     case 'roomIdSetFromURL':
-      return {...state, roomAdmin: false, roomId: action.payload}
+      return {...state, roomId: action.payload}
     case 'roomReceive':
       return {...state, room: action.payload}
     case 'roomParticipantAdd':
@@ -167,7 +188,6 @@ function reducer(state: types.State, action: types.Action): types.State {
       return {...state, room: {...state.room!, state: action.payload}}
     case 'hostChange':
       return {...state, room: {...state.room!, hostId: action.payload}}
-
     case 'noteCreated':
       return {
         ...state,
@@ -179,7 +199,21 @@ function reducer(state: types.State, action: types.Action): types.State {
           ]
         }
       }
-
+    case 'noteUpdated':
+      const {noteId, text} = action.payload
+      const notes = [...state.room!.notes] // copy
+      const noteIndex = notes.findIndex((n: types.Note) => n.id === noteId)!
+      notes[noteIndex] = {
+        ...notes[noteIndex],
+        text: text,
+      }
+      return {
+        ...state,
+        room: {
+          ...state.room!,
+          notes: notes,
+        }
+      }
     default:
       throw new Error(`Unknown action ${action}`);
   }

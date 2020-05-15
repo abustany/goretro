@@ -35,7 +35,6 @@ export interface State {
   name?: string;
   identified: boolean;
   roomId?: string;
-  roomAdmin: boolean;
   room?: Room;
 }
 
@@ -69,4 +68,7 @@ export type Action = {
 } | {
   type: 'noteCreated';
   payload: Note;
+} | {
+  type: 'noteUpdated';
+  payload: {noteId: number, text: string}
 }
