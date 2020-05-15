@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import '../stylesheets/utils.scss'
+import './Login.scss'
 
 const nameLocalStorageKey: string = "nickname"
 
@@ -20,7 +20,7 @@ export default function Login({onNameSet}: LoginProps) {
     }
   }
 
-  return <div className="centered-col-300 center-form vmargin-20pc">
+  return <div className="Login">
     <div>
       <input
         type="text"

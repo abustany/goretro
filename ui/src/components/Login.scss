@@ -1,0 +1,8 @@
+@import "../stylesheets/utils.scss";
+
+.Login {
+  @extend .centered-col-300;
+  @extend .center-form;
+
+  margin-top: 2rem;
+}
