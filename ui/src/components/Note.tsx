@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 import * as types from '../types';
 
@@ -18,9 +18,13 @@ interface NoteProps {
 export default function Note({note, editable, participants, onNoteSave, tabIndex}: NoteProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [editedText, setEditedText] = useState<string>("")
-
   const isCreate = !note
   const isInEditMode = editedText !== "" || isCreate
+
+  useEffect(() => {
+    if (!isCreate && isInEditMode) textAreaFocus(textareaRef.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editedText])
 
   const author = note ? (participants.get(note.authorId)?.name || "Unknown author") : null
 
@@ -49,11 +53,11 @@ export default function Note({note, editable, participants, onNoteSave, tabIndex
 
   // Badges
 
-  const editBadge = () => <button onClick={handleEdit} className="Note__badge Note__edit">✎</button>
+  const editBadge = () => <button onClick={handleEdit} className="Note__badge Note__edit" data-test-id="noteeditor-edit">✎</button>
   const authorBadge = () => <em className="Note__badge">{ author }</em>
-  const saveBadge = () => <button key="save" onClick={handleSave} className="Note__badge" data-test-id="noteeditor-add"> { isCreate ? "↵" : "✓" } </button>
-  const cancelBadge = () => <button key="cancel" onClick={handleCancelEdition} className="Note__badge"> ✕ </button>
-  const deleteBadge = () => <button key="delete" onClick={handleDelete} className="Note__badge"> ␡ </button>
+  const saveBadge = () => <button key="save" onClick={handleSave} className="Note__badge" data-test-id="noteeditor-save"> { isCreate ? "↵" : "✓" } </button>
+  const cancelBadge = () => <button key="cancel" onClick={handleCancelEdition} className="Note__badge" data-test-id="noteeditor-cancel"> ✕ </button>
+  const deleteBadge = () => <button key="delete" onClick={handleDelete} className="Note__badge" data-test-id="noteeditor-delete"> ␡ </button>
 
   // Logic
 
@@ -103,6 +107,12 @@ function onMetaEnter(fn: (e: React.KeyboardEvent) => any) {
   return (e: React.KeyboardEvent) => {
     if (e.keyCode === 13 && (e.metaKey || e.ctrlKey)) fn(e)
   }
+}
+
+function textAreaFocus(textarea: HTMLTextAreaElement | null) {
+  if (!textarea) return
+  textarea.focus()
+  textarea.setSelectionRange(textarea.value.length,textarea.value.length);
 }
 
 // ✎
