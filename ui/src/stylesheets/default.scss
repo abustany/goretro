@@ -14,11 +14,13 @@ button, input[type=submit] {
   background-color: $redColor;
   color: $whiteColor;
 
+  cursor: pointer;
+
   &:hover {
     background-color: $redAltColor;
   }
   &:active {
-    background-color: $redAltColor;
+    background-color: $redColor;
   }
 }
 

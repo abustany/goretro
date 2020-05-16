@@ -59,7 +59,10 @@ export default function Room({room, userClientId, link, onNoteSave, onStateTrans
 
   const joinInvitationComponent = () => <div>
     <h2 className="section-topmargin">Invite participants!</h2>
-    <span>{link}</span>
+    <div className="Room__link" onClick={() => {navigator.clipboard.writeText(link)}}>
+      <span className="Room__link-text">{link}</span>
+      <span className="Room__link-icon" role="img" aria-labelledby="Copy to clipboard">📋</span>
+    </div>
   </div>
 
   const statusAdminComponent = () => {
