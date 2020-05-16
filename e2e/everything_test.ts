@@ -11,10 +11,11 @@ interface Note {
   mood: Mood;
   text: string;
   finalText?: string;
+  deleted?: boolean;
 }
 
 const notes: Note[] = [
-  {author: user1name, mood: 'positive', text: 'I feel happy'},
+  {author: user1name, mood: 'positive', text: 'I feel happy', deleted: true},
   {author: user1name, mood: 'positive', text: 'I got a new hit', finalText: 'I got a new hat'},
   {author: user1name, mood: 'negative', text: 'My shoes are too small'},
   {author: user1name, mood: 'confused', text: 'What am I doing here?'},
@@ -47,7 +48,6 @@ Scenario('Test everything', async (I) => {
   I.click('$room-start');
 
   // Save some notes
-
   for (const note of notes.filter(n => n.author === user1name)) {
     saveAndCheckNote(I, note.mood, note.text);
   }
@@ -59,27 +59,30 @@ Scenario('Test everything', async (I) => {
   });
 
   // Edit a note
-  editNote(I, notes[1].mood, 1, notes[1].finalText)
+  editNote(I, notes[1].text, notes[1].finalText)
 
   // Edit & Cancel a note
+  editCancelNote(I, notes[2].text)
 
   // Delete a note
-
+  notes.filter((n) => n.deleted).forEach((n) => editDeleteNote(I, n.text))
 
   // Close the retro
-
   I.click('$room-close');
 
-  // Expect to see all the notes, this time with the author
-
-  for (const note of notes) {
-    iSeeNote(I, note.mood, (note.finalText || note.text), note.author);
-  }
-
-  session(user2name, () => {
+  // Expect to see all the notes and their author
+  const checkNoteState = () => {
     for (const note of notes) {
-      iSeeNote(I, note.mood, (note.finalText || note.text), note.author);
+      if (!note.deleted) {
+        iSeeNote(I, note.mood, (note.finalText || note.text), note.author);
+      } else {
+        I.dontSee(note.finalText || note.text)
+      }
     }
+  }
+  checkNoteState()
+  session(user2name, () => {
+    checkNoteState()
   });
 });
 
@@ -107,10 +110,34 @@ function saveNote(I: CodeceptJS.I, mood: Mood, text: string) {
   I.click(locate('$noteeditor-save').inside(columnTestId(mood)));
 }
 
-function editNote(I: CodeceptJS.I, mood: Mood, noteIndex: number, correctedText: string) {
-  I.click(locate('$noteeditor-edit').at(noteIndex + 1).inside(columnTestId(mood)));
-  I.fillField(locate('$noteeditor-text').inside(columnTestId(mood)), correctedText);
-  I.click(locate('$noteeditor-save').inside(columnTestId(mood)));
+function editNote(I: CodeceptJS.I, initialText: string, correctedText: string) {
+  const editBtn = locateAfter(locate('$noteeditor-edit'), locate('*').withText(initialText)).first()
+  I.click(editBtn)
+  const textArea = locate('*').withText(initialText).first()
+  const saveBtn = locateAfter(locate('$noteeditor-save'), locate('*').withText(initialText)).first()
+
+  I.fillField(textArea, correctedText)
+  I.click(saveBtn)
+}
+
+function editCancelNote(I: CodeceptJS.I, initialText: string) {
+  const editBtn = locateAfter(locate('$noteeditor-edit'), locate('*').withText(initialText)).first()
+  I.click(editBtn)
+  const textArea = locate('*').withText(initialText).first()
+  const cancelBtn = locateAfter(locate('$noteeditor-cancel'), locate('*').withText(initialText)).first()
+
+  I.fillField(textArea, "about anything")
+  I.click(cancelBtn)
+}
+
+function editDeleteNote(I: CodeceptJS.I, initialText: string) {
+  const editBtn = locateAfter(locate('$noteeditor-edit'), locate('*').withText(initialText)).first()
+  I.click(editBtn)
+  const textArea = locate('*').withText(initialText).first()
+  const deleteBtn = locateAfter(locate('$noteeditor-delete'), locate('*').withText(initialText)).first()
+
+  I.fillField(textArea, "about anything")
+  I.click(deleteBtn)
 }
 
 function iSeeNote(I: CodeceptJS.I, mood: Mood, text: string, author?: string) {
@@ -125,4 +152,10 @@ function iSeeNote(I: CodeceptJS.I, mood: Mood, text: string, author?: string) {
 function saveAndCheckNote(I: CodeceptJS.I, mood: Mood, text: string) {
   saveNote(I, mood, text);
   iSeeNote(I, mood, text)
+}
+
+function locateAfter(after: CodeceptJS.Locator, before: CodeceptJS.Locator): CodeceptJS.Locator {
+  return locate({xpath:
+    after.after(before).toXPath().replace("preceding-sibling::", "preceding::")
+  })
 }
