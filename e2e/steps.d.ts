@@ -9,4 +9,5 @@ declare namespace CodeceptJS {
   namespace Translation {
     interface Actions {}
   }
+  function pause(obj: Object): any
 }
