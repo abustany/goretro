@@ -51,7 +51,7 @@ export default function Note({note, editable, participants, onNoteSave, tabIndex
 
   const editBadge = () => <button onClick={handleEdit} className="Note__badge Note__edit">✎</button>
   const authorBadge = () => <em className="Note__badge">{ author }</em>
-  const saveBadge = () => <button key="save" onClick={handleSave} className="Note__badge"> { isCreate ? "↵" : "✓" } </button>
+  const saveBadge = () => <button key="save" onClick={handleSave} className="Note__badge" data-test-id="noteeditor-add"> { isCreate ? "↵" : "✓" } </button>
   const cancelBadge = () => <button key="cancel" onClick={handleCancelEdition} className="Note__badge"> ✕ </button>
   const deleteBadge = () => <button key="delete" onClick={handleDelete} className="Note__badge"> ␡ </button>
 
@@ -84,6 +84,7 @@ export default function Note({note, editable, participants, onNoteSave, tabIndex
         onKeyDown={ onMetaEnter(handleSave) }
         placeholder="…"
         tabIndex={tabIndex}
+        data-test-id="noteeditor-text"
       />
     } else {
       return <div>{ text }</div>

@@ -55,7 +55,7 @@ Scenario('Test everything', async (I) => {
       saveAndCheckNote(I, note.mood, note.text);
     }
   });
-  
+
   // Close the retro
 
   I.click('$room-close');
@@ -102,7 +102,7 @@ function iSeeNote(I: CodeceptJS.I, mood: Mood, text: string, author?: string) {
   I.see(text, noteLocator);
 
   if (author) {
-    I.see(author, locate({css: '.Note__Author'}).inside(noteLocator))
+    I.see(author, noteLocator)
   }
 }
 
