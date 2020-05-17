@@ -8,7 +8,7 @@ interface LoginProps {
   onNameSet: (name: string) => void;
 }
 
-export default function Login({onNameSet}: LoginProps) {
+export default function({onNameSet}: LoginProps) {
   const [name, setName] = useState(
     localStorage.getItem(nameLocalStorageKey) || ""
   );

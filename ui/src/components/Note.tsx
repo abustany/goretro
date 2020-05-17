@@ -4,7 +4,7 @@ import * as types from '../types';
 
 import './Note.scss'
 
-interface NoteProps {
+interface Props {
   note?: types.Note;
   participants: Map<string, types.Participant>;
   editable: boolean;
@@ -15,7 +15,7 @@ interface NoteProps {
 // If `note` is present, behaves as an Note that can be edited or deleted.
 // Otherwise, behaves as a Note creator that gets empty after edition.
 // `note` is not meant to change over the lifetime.
-export default function Note({note, editable, participants, onNoteSave, tabIndex}: NoteProps) {
+export default function({note, editable, participants, onNoteSave, tabIndex}: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [editedText, setEditedText] = useState<string>("")
   const isCreate = !note

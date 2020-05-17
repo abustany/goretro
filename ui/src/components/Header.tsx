@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 
 import WebGLBanner from './WebGLBanner'
 import './Header.scss'
-import '../stylesheets/utils.scss'
 
 interface Props {
   name?: string;
 }
 
-export default function Header({name}: Props) {
+export default function({name}: Props) {
   const [webGLDisabled, setWebGLDisabled] = useState(false)
 
   let banner;

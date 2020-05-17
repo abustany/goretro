@@ -3,7 +3,6 @@ import React from 'react';
 import * as t from '../types'
 
 import './StatusParticipant.scss'
-import '../stylesheets/utils.scss'
 
 const stateDescription = {
   [t.RoomState.WAITING_FOR_PARTICIPANTS]: "Waiting for the host to press start...",

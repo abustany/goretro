@@ -3,13 +3,13 @@ import React from 'react';
 import * as t from '../types'
 import './Participants.scss'
 
-interface ParticipantsProps {
+interface Props {
   participants: Map<string, t.Participant>
   hostId: string
   userId: string
 }
 
-export default function Participants({participants, hostId, userId}: ParticipantsProps){
+export default function({participants, hostId, userId}: Props){
   return <div>
     <h2>Online ({ participants.size })</h2>
     <ul>{ Array.from(participants.values()).map(el => {

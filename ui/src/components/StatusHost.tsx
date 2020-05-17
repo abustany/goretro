@@ -3,7 +3,6 @@ import React from 'react';
 import * as t from '../types'
 
 import './StatusHost.scss'
-import '../stylesheets/utils.scss'
 
 const stateDescription = {
   [t.RoomState.WAITING_FOR_PARTICIPANTS]: "Press start when everyone is ready.",
@@ -25,9 +24,7 @@ export default function({state, onStateTransition}: Props) {
   const hostButton = () => {
     const btn = nextButton[state]
     if (!btn) return null
-    return <div className="centered-col-300">
-      <button onClick={onStateTransition} data-test-id={btn.testId}>{ btn.text }</button>
-    </div>
+    return <button onClick={onStateTransition} data-test-id={btn.testId}>{ btn.text }</button>
   }
 
   return <div>

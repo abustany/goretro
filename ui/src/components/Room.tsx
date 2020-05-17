@@ -9,7 +9,6 @@ import StatusHost from './StatusHost'
 import Link from './Link'
 
 import './Room.scss'
-import '../stylesheets/utils.scss'
 
 const moodIcons = {
   [types.Mood.POSITIVE]: "👍",

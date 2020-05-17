@@ -26,3 +26,14 @@
   justify-content: center;
   overflow-y: auto;
 }
+
+// Utils
+
+.App__global-message-title {
+  font-size: 2rem;
+  font-family: $fontTitle;
+}
+
+.retro-font {
+  font-family: $fontTitle;
+}
