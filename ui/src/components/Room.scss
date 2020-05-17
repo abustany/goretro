@@ -14,14 +14,12 @@
   display: flex;
   justify-content: space-between;
   align-content: stretch;
+  flex-grow: 1;
 }
 
 @media (max-width: 1200px) {
   .Room__columns {
-    display: block;
-    margin: auto;
-    max-width: 800px;
-    min-height: unset;
+    flex-direction: column;
   }
 }
 
