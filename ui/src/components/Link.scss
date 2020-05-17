@@ -1,0 +1,42 @@
+@import "../stylesheets/config.scss";
+
+.Link {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+
+  padding: 0.5rem;
+
+  background-color: $darkLighterColor;
+  border-radius: 0.5rem;
+
+  h2 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  cursor: pointer;
+
+  &:hover {
+    background-color: $darkLighterLighterColor;
+  }
+
+  &:active {
+    background-color: $darkLighterColor;
+  }
+}
+
+.Link > * {
+  padding: 0.5rem;
+}
+
+.Link__text {
+  font-family: monospace;
+}
+
+.Link__icon {
+  font-size: 2rem;
+  // -webkit-filter: grayscale(100%);
+  // filter: grayscale(100%);
+}

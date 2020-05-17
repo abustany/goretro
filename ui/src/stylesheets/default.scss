@@ -11,11 +11,13 @@ input, button, textarea {
 
 // Buttons
 button, input[type=submit] {
-  background-color: $redColor;
+  background-color: $redAltColor;
   color: $whiteColor;
 
+  cursor: pointer;
+
   &:hover {
-    background-color: $redAltColor;
+    background-color: $redColor;
   }
   &:active {
     background-color: $redAltColor;

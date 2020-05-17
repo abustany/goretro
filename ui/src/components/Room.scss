@@ -1,14 +1,19 @@
 @import "../stylesheets/config.scss";
 
 .Room {
+  flex-grow: 1;
+  flex-shrink: 0;
   padding: 0 0.5rem;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .Room__columns {
   display: flex;
   justify-content: space-between;
   align-content: stretch;
-  // min-height: 600px; // TODO
 }
 
 @media (max-width: 1200px) {
@@ -22,6 +27,16 @@
 
 .Room__footer {
   text-align: center;
+  flex-grow: 1;
+
+  // Inner
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  > * {
+    margin: 2rem 0;
+  }
 
   h2 {
     margin-bottom: 0.5rem;
@@ -47,12 +62,8 @@
   }
 }
 
-.Room__flag {
-  color: $redAltColor;
-}
-
-.Room__flag-pointer {
-  padding-left: 10px;
+.Room__footer--btm {
+  justify-content: flex-end;
 }
 
 .Room__status {

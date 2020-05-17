@@ -3,20 +3,22 @@ import React, { useReducer, useEffect, Dispatch } from 'react';
 import { Connection } from './connection';
 import * as types from './types';
 
-import Err from './components/Error';
-import Loading from './components/Loading';
+import AppGlobalMessage from './components/AppGlobalMessage';
 import Header from './components/Header';
 import Login from './components/Login';
 import Room from './components/Room';
 
 import './App.scss'
 
-export default function App(props: {connection: Connection}) {
+interface Props {
+  connection: Connection
+}
+
+export default function({connection}: Props) {
   const [state, dispatch] = useReducer(reducer, initialState)
-  console.log(state)
 
   useEffect(() => {
-    connect(props.connection, dispatch)
+    connect(connection, dispatch)
     readRoomIdFromURL(dispatch)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -24,9 +26,9 @@ export default function App(props: {connection: Connection}) {
   useEffect(() => {
     if (state.identified) {
       if (state.roomId) {
-        props.connection.joinRoom(state.roomId)
+        connection.joinRoom(state.roomId)
       } else {
-        props.connection.createRoom()
+        connection.createRoom()
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -36,14 +38,16 @@ export default function App(props: {connection: Connection}) {
     <div className="App">
       <Header name={state.name}/>
 
-      { mainComponent(props.connection, state, dispatch) }
+      <main className="App__main">
+        { mainComponent(connection, state, dispatch) }
+      </main>
     </div>
   );
 }
 
 function mainComponent(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>) {
   if (state.error) {
-    return <Err message={state.error}/>
+    return <AppGlobalMessage title="Error :(">{ state.error }</AppGlobalMessage>
   }
 
   if (!state.name) {
@@ -51,12 +55,12 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
   }
 
   if (!state.room) {
-    return <Loading/>
+    return <AppGlobalMessage title="Loading..."/>
   }
 
   return <Room
     room={state.room}
-    userClientId={connection.clientId}
+    userId={connection.clientId}
     link={window.location.toString()}
     onNoteSave={(mood, text, id) => { handleNoteSave(connection, state, dispatch, mood, text, id) }}
     onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
@@ -140,7 +144,7 @@ const initialState: types.State = {
   identified: false,
 }
 
-// TMP
+// // Go to Room:
 // const initialState: types.State = {
 //   connected: false,
 //   identified: false,

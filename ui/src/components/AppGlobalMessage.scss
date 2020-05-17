@@ -1,0 +1,9 @@
+@import '../stylesheets/config.scss';
+
+.AppGlobalMessage {
+  text-align: center;
+
+  h2 {
+    font-family: $fontTitle;
+  }
+}

@@ -1,6 +1,5 @@
 /// <reference types='codeceptjs' />
 
-
 declare namespace CodeceptJS {
   interface SupportObject { I: CodeceptJS.I }
   interface CallbackOrder { [0]: CodeceptJS.I }
@@ -9,4 +8,6 @@ declare namespace CodeceptJS {
   namespace Translation {
     interface Actions {}
   }
+  function pause(obj: Object): any
+  interface Locator { value: string, locator: {xpath} }
 }

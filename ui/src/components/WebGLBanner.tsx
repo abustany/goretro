@@ -3,11 +3,11 @@ import React, { useEffect, useRef } from 'react';
 import logo from './WebGLBanner.png';
 import './WebGLBanner.scss';
 
-interface BannerProps {
+interface Props {
   onNotDisplayable: () => void;
 }
 
-export default function Banner({onNotDisplayable}: BannerProps) {
+export default function({onNotDisplayable}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number>(null)
 

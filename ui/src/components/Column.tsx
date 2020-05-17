@@ -2,10 +2,9 @@ import React from 'react';
 
 import Note from './Note'
 import './Column.scss'
-import '../stylesheets/utils.scss'
 import * as types from '../types';
 
-interface ColumnProps {
+interface Props {
   editable: boolean;
   icon: string;
   notes: types.Note[];
@@ -14,7 +13,7 @@ interface ColumnProps {
   tabIndex: number;
 }
 
-export default function Column({editable, icon, notes, participants, onNoteSave, tabIndex, ...rest}: ColumnProps) {
+export default function({editable, icon, notes, participants, onNoteSave, tabIndex, ...rest}: Props) {
   const noteComponents = notes.filter((n) => n.text !== "").map((n) => <Note
       key={n.authorId + n.id}
 

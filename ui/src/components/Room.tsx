@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import * as types from '../types';
 
 import Column from './Column'
-import './Room.scss'
-import '../stylesheets/utils.scss'
+import Participants from './Participants'
+import StatusParticipant from './StatusParticipant'
+import StatusHost from './StatusHost'
+import Link from './Link'
 
+import './Room.scss'
 
 const moodIcons = {
   [types.Mood.POSITIVE]: "👍",
@@ -13,78 +16,21 @@ const moodIcons = {
   [types.Mood.CONFUSED]: "🤔",
 }
 
-const nextButton = {
-  [types.RoomState.WAITING_FOR_PARTICIPANTS]: {text: "Start!", testId: "room-start"},
-  [types.RoomState.RUNNING]: {text: "Close & Review", testId: "room-close"},
-  [types.RoomState.REVIEWING]: null,
-}
-
-const stateDescriptionParticipant = {
-  [types.RoomState.WAITING_FOR_PARTICIPANTS]: "Waiting for the host to press start...",
-  [types.RoomState.RUNNING]: "Notes will be shared and reviewed in the next stage.",
-  [types.RoomState.REVIEWING]: "Review & Action points",
-}
-
-const stateDescriptionAdmin = {
-  [types.RoomState.WAITING_FOR_PARTICIPANTS]: "Press start when everyone is ready.",
-  [types.RoomState.RUNNING]: "Time to write notes!",
-  [types.RoomState.REVIEWING]: stateDescriptionParticipant[types.RoomState.REVIEWING],
-}
-
-interface RoomProps {
+interface Props {
   room: types.Room;
-  userClientId: string;
+  userId: string;
   link: string;
   onNoteSave: (mood: types.Mood, text: string, id?: number) => void;
   onStateTransition: () => void;
 }
-
-export default function Room({room, userClientId, link, onNoteSave, onStateTransition}: RoomProps) {
+export default function({room, userId, link, onNoteSave, onStateTransition}: Props) {
   const participants = normalizeParticipants(room.participants)
-  const isAdmin = userClientId === room.hostId
+  const notesByMood = sortNotesByMoods(room.notes)
+  const isHost = userId === room.hostId
   const isWaiting = room.state === types.RoomState.WAITING_FOR_PARTICIPANTS
   const isRunning = room.state === types.RoomState.RUNNING
-  const notesByMood = sortNotesByMoods(room.notes)
 
-  const participantsListComponent = () => <div>
-    <h2 className="section-topmargin">Online ({ participants.size })</h2>
-    <ul>{ Array.from(participants.values()).map(el => {
-      let badgesArr = []
-      if (el.clientId === userClientId) badgesArr.push(flagComponent('YOU'))
-      if (el.clientId === room.hostId) badgesArr.push(flagComponent('HOST'))
-
-      return <li key={el.clientId} data-test-id="room-participant-list-item">{el.name}{badgesArr}</li>
-    })}</ul>
-  </div>
-
-  const joinInvitationComponent = () => <div>
-    <h2 className="section-topmargin">Invite participants!</h2>
-    <span>{link}</span>
-  </div>
-
-  const statusAdminComponent = () => {
-    return <div className="section-topmargin">
-      { hostButton() }
-      <p className="Room__status">{ stateDescriptionAdmin[room.state] }</p>
-    </div>
-  }
-
-  const statusParticipantComponent = () => {
-    return <div className="section-topmargin">
-      <h2>▼</h2>
-      <div className="Room__status">{ stateDescriptionParticipant[room.state] }</div>
-    </div>
-  }
-
-  const hostButton = () => {
-    const btn = nextButton[room.state]
-    if (!btn) return null
-    return <div className="centered-col-300">
-      <button onClick={onStateTransition} data-test-id={btn.testId}>{ btn.text }</button>
-    </div>
-  }
-
-  return <div className="Room section-topmargin">
+  return <div className="Room">
     { !isWaiting && <div className="Room__columns">
       { [types.Mood.POSITIVE, types.Mood.NEGATIVE, types.Mood.CONFUSED].map((mood, index) =>
         <Column
@@ -100,12 +46,12 @@ export default function Room({room, userClientId, link, onNoteSave, onStateTrans
       ) }
     </div> }
 
-    <div className={`Room__footer`}>
-      { participantsListComponent() }
+    <div className={`Room__footer ${isWaiting ? null : "Room__footer--btm"}`}>
+      <Participants participants={participants} hostId={room.hostId} userId={userId}/>
 
-      { isWaiting && joinInvitationComponent() }
+      { isWaiting && <Link link={link}/> }
 
-      { isAdmin ? statusAdminComponent() : statusParticipantComponent() }
+      { isHost ? <StatusHost state={room.state} onStateTransition={onStateTransition}/> : <StatusParticipant state={room.state}/> }
     </div>
   </div>
 }
@@ -124,8 +70,4 @@ function sortNotesByMoods(notes: types.Note[]): { [key: number]: types.Note[] } 
 
 function normalizeParticipants(arr: types.Participant[]): Map<string, types.Participant> {
   return arr.reduce((map, el) => map.set(el.clientId, el), new Map())
-}
-
-function flagComponent(text: string) {
-  return <span key={text} className="Room__flag"><span className="Room__flag-pointer">◄</span> <span className="Room_flag-text">{text}</span></span>
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import '../stylesheets/utils.scss'
+import './Login.scss'
 
 const nameLocalStorageKey: string = "nickname"
 
@@ -8,7 +8,7 @@ interface LoginProps {
   onNameSet: (name: string) => void;
 }
 
-export default function Login({onNameSet}: LoginProps) {
+export default function({onNameSet}: LoginProps) {
   const [name, setName] = useState(
     localStorage.getItem(nameLocalStorageKey) || ""
   );
@@ -20,18 +20,16 @@ export default function Login({onNameSet}: LoginProps) {
     }
   }
 
-  return <div className="centered-col-300 center-form vmargin-20pc">
-    <div>
-      <input
-        type="text"
-        placeholder="Nickname"
-        onChange={(e) => setName(e.target.value)}
-        value={name}
-        onKeyDown={(e) => { e.key === 'Enter' && handleSetName() }}
-        data-test-id="login-nickname"
-      />
+  return <div className="Login">
+    <input
+      type="text"
+      placeholder="Nickname"
+      onChange={(e) => setName(e.target.value)}
+      value={name}
+      onKeyDown={(e) => { e.key === 'Enter' && handleSetName() }}
+      data-test-id="login-nickname"
+    />
 
-      <button data-test-id="login-submit" onClick={handleSetName}>Let me in!</button>
-    </div>
+    <button data-test-id="login-submit" onClick={handleSetName}>Let me in!</button>
   </div>
 }
