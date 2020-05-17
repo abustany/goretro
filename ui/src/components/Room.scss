@@ -47,57 +47,6 @@
   }
 }
 
-.Room__flag {
-  color: $redAltColor;
-}
-
-.Room__flag-pointer {
-  padding-left: 10px;
-}
-
 .Room__status {
   font-style: italic;
-}
-
-.Room__link {
-  display: inline-flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-
-  padding: 0.5rem;
-
-  background-color: $darkLighterColor;
-  border-radius: 0.5rem;
-
-  h2 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-  }
-
-  cursor: pointer;
-
-  &:hover {
-    background-color: $darkLighterLighterColor;
-  }
-
-  &:active {
-    background-color: $darkLighterColor;
-  }
-}
-
-
-
-.Room__link > * {
-  padding: 0.5rem;
-}
-
-.Room__link-text {
-  font-family: monospace;
-}
-
-.Room__link-icon {
-  font-size: 2rem;
-  // -webkit-filter: grayscale(100%);
-  // filter: grayscale(100%);
 }
