@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import * as types from '../types';
 
@@ -31,7 +31,7 @@ export default function({room, userId, link, onNoteSave, onStateTransition}: Pro
   const isWaiting = room.state === types.RoomState.WAITING_FOR_PARTICIPANTS
   const isRunning = room.state === types.RoomState.RUNNING
 
-  return <div className="Room section-topmargin">
+  return <div className="Room">
     { !isWaiting && <div className="Room__columns">
       { [types.Mood.POSITIVE, types.Mood.NEGATIVE, types.Mood.CONFUSED].map((mood, index) =>
         <Column
@@ -47,7 +47,7 @@ export default function({room, userId, link, onNoteSave, onStateTransition}: Pro
       ) }
     </div> }
 
-    <div className={`Room__footer`}>
+    <div className={`Room__footer ${isWaiting ? null : "Room__footer--btm"}`}>
       <Participants participants={participants} hostId={room.hostId} userId={userId}/>
 
       { isWaiting && <Link link={link}/> }

@@ -30,7 +30,7 @@ export default function({state, onStateTransition}: Props) {
     </div>
   }
 
-  return <div className="section-topmargin">
+  return <div>
     { hostButton() }
     <p className="Room__status">{ stateDescription[state] }</p>
   </div>

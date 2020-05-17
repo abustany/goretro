@@ -35,7 +35,9 @@ export default function App(props: {connection: Connection}) {
     <div className="App">
       <Header name={state.name}/>
 
-      { mainComponent(props.connection, state, dispatch) }
+      <main className="App__main">
+        { mainComponent(props.connection, state, dispatch) }
+      </main>
     </div>
   );
 }
@@ -139,7 +141,7 @@ const initialState: types.State = {
   identified: false,
 }
 
-// TMP
+// // Go to Room:
 // const initialState: types.State = {
 //   connected: false,
 //   identified: false,

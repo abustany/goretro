@@ -11,7 +11,7 @@ interface ParticipantsProps {
 
 export default function Participants({participants, hostId, userId}: ParticipantsProps){
   return <div>
-    <h2 className="section-topmargin">Online ({ participants.size })</h2>
+    <h2>Online ({ participants.size })</h2>
     <ul>{ Array.from(participants.values()).map(el => {
       let badgesArr = []
       if (el.clientId === userId) badgesArr.push(flagComponent('YOU'))

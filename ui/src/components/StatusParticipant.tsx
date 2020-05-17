@@ -15,7 +15,7 @@ interface Props {
   state: t.RoomState
 }
 export default function({state}: Props) {
-  return <div className="section-topmargin">
+  return <div>
     <h2>▼</h2>
     <div className="Room__status">{ stateDescription[state] }</div>
   </div>

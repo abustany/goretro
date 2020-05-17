@@ -21,17 +21,15 @@ export default function Login({onNameSet}: LoginProps) {
   }
 
   return <div className="Login">
-    <div>
-      <input
-        type="text"
-        placeholder="Nickname"
-        onChange={(e) => setName(e.target.value)}
-        value={name}
-        onKeyDown={(e) => { e.key === 'Enter' && handleSetName() }}
-        data-test-id="login-nickname"
-      />
+    <input
+      type="text"
+      placeholder="Nickname"
+      onChange={(e) => setName(e.target.value)}
+      value={name}
+      onKeyDown={(e) => { e.key === 'Enter' && handleSetName() }}
+      data-test-id="login-nickname"
+    />
 
-      <button data-test-id="login-submit" onClick={handleSetName}>Let me in!</button>
-    </div>
+    <button data-test-id="login-submit" onClick={handleSetName}>Let me in!</button>
   </div>
 }
