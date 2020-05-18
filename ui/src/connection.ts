@@ -1,23 +1,30 @@
-import { Mood, RoomState } from './types';
-import { trimBase64Padding } from './utils';
+import * as u from './utils'
 
-const CLIENT_ID_LEN = 16;
-const SECRET_LEN = 64;
+export type Message = {name: string} & Record<string, any>
 
-type ConnectionStateChangeCallback = (connected: boolean) => void;
-
-type Message = {name: string} & Record<string, any>
-type MessageCallback = (message: Message) => void;
-
+// A connection is either open (when `start`) or close (no `start` or it's been Lost).
+// When open, it allows sending commands with dataCommand.
+// When open, it also maintains an SSE connection which receives messages from the backend. This connection can be lagging, meaning it's not certain anymore that messages are received.
 export class Connection {
-  baseUrl: string
-  clientId: string
-  secret: string
+  public clientId: string
 
-  connectionStateChangeListeners: ConnectionStateChangeCallback[] = [];
-  messageListeners: MessageCallback[] = [];
+  private secret: string
+  private baseUrl: string
 
-  connected = false // EventSource
+  private sseConn?: EventSource
+  private sseLastKeepAliveAt?: number
+  private sseMonitor?: NodeJS.Timeout
+  private sseLagging?: boolean
+  private sseUrl?: string
+
+  private commandsChain?: Promise<any>
+  private startServingCommands?: (value?: unknown) => void
+
+  private lostSession?: boolean
+
+  private messageListeners: MessageCallback[] = [];
+  private laggingListeners: LaggingCallback[] = [];
+  private lostListeners: LostCallback[] = [];
 
   constructor(baseUrl: string, clientId: string, secret: string) {
     this.baseUrl = baseUrl;
@@ -25,121 +32,171 @@ export class Connection {
     this.secret = secret;
   }
 
-  async start(): Promise<void> {
-    if (this.connected) {
-      return;
+  public onMessage(callback: MessageCallback) { this.messageListeners.push(callback) }
+  public onLagging(callback: LaggingCallback) { this.laggingListeners.push(callback) }
+  public onLost(callback: LostCallback) { this.lostListeners.push(callback) }
+
+  public async start(): Promise<void> {
+    this.lostSession = false
+    this.sseLagging = false
+    this.resetCommandsQueue()
+    // Start monitoring here already, as we expect it in fact from there on.
+    this.ensureSSEMonitored()
+
+    return this.createSession().then((helloResponse) => {
+      this.startServingCommands!() // Could also be in launchSSE
+      this.sseUrl = helloResponse.eventsUrl
+      this.launchSSE()
+    })
+  }
+
+  public async restart(): Promise<void> {
+    return this.start()
+  }
+
+  public async dataCommand<T>(payload: unknown): Promise<T> {
+    this.commandsChain = this.commandsChain!.catch(() => {})
+      .then(() => {
+        if (this.lostSession) return u.makeUnresolvablePromise<T>()
+        return this.rawCommand<T>({name: 'data', clientId: this.clientId, secret: this.secret, payload: payload})
+      }).catch((err) => {
+        if (err instanceof UnknownClientError) return u.makeUnresolvablePromise<T>()
+        throw err
+      })
+    return this.commandsChain
+  }
+
+  private resetCommandsQueue(): void {
+    const [promise, resolver] = u.makeUnresolvedPromise()
+    this.commandsChain = promise
+    this.startServingCommands = resolver
+  }
+
+  private async createSession(): Promise<HelloResponse> {
+    return this.rawCommand<HelloResponse>({name: 'hello', clientId: this.clientId, secret: this.secret})
+  }
+
+  private async resumeSession(): Promise<HelloResponse> {
+    return this.rawCommand<any>({name: 'resume', clientId: this.clientId, secret: this.secret})
+  }
+
+  private handleLostSession(): void {
+    if (this.lostSession) return
+    this.lostSession = true
+
+    this.resetCommandsQueue()
+    this.lostListeners.forEach(l => l());
+  }
+
+  private ensureSSEMonitored(): void {
+    this.sseLastKeepAliveAt = Date.now() // restart grace period
+    if (this.sseMonitor) return
+
+    this.sseMonitor = setInterval(() => this.sseMonitoring(), Connection.MONITORING_INTERVAL_MS)
+  }
+
+  private launchSSE(): void {
+    this.sseConn = new EventSource(this.sseUrl!);
+
+    this.sseConn.onopen = () => {
+      this.sseLastKeepAliveAt = Date.now()
+      this.sseMonitoring()
     }
 
-    const res = await rawCommand<HelloResponse>(this.baseUrl, {name: 'hello', clientId: this.clientId, secret: this.secret})
-
-    // console.log('Connection up, events URL: ' + res.eventsUrl)
-
-    const eventSource = new EventSource(res.eventsUrl);
-    eventSource.onerror = (err) => {
-      console.error('Event source error', err);
-    }
-    // maybe useless (just for logging)
-    eventSource.onopen = () => {
-      // Lost connection but can ignore
-      // console.log('Event source connected');
-      this.connected = true;
-      this.connectionStateChangeListeners.forEach(x => x(true));
+    this.sseConn.onerror = (_) => {
+      // RK: Not triggered with the development server.
+      // RK: The error being passed doesn't allow to know what went wrong.
+      console.log("SSE Connection Error")
+      if (this.sseConn!.readyState === EventSource.CLOSED) {
+        this.relaunchSSE()
+      }
     }
 
-    eventSource.onmessage = (evt) => {
-      // console.log("Event received")
-      // console.log(evt)
-
+    this.sseConn.onmessage = (evt) => {
       const parsed = JSON.parse(evt.data);
 
+      // Update keep-alive
       if (parsed.event === 'keep-alive') {
-        return;
+        this.sseLastKeepAliveAt = Date.now()
+        return
       }
 
-      this.messageListeners.forEach(x => x(parsed));
+      // Notify listeners
+      this.messageListeners.forEach(l => l(parsed));
     }
   }
 
-  onConnectionStateChange(callback: (connected: boolean) => void) {
-    this.connectionStateChangeListeners.push(callback);
+  private relaunchSSE(): void {
+    this.sseConn?.close()
+    console.log("here")
+    this.resumeSession().then(() => this.launchSSE)
   }
 
-  onMessage(callback: (msg: Message) => void) {
-    this.messageListeners.push(callback);
-  }
-
-  // API
-
-  async identify(nickname: string): Promise<void> {
-    return this.dataCommand({name: 'identify', nickname: nickname})
-  }
-
-  async createRoom() {
-     // TODO(abustany): What do we do for the room name?
-    return this.dataCommand({name: 'create-room', roomName: "name"})
-  }
-
-  async joinRoom(roomId: string) {
-    return this.dataCommand({name: 'join-room', roomId: roomId})
-  }
-
-  async setRoomState(state: RoomState) {
-    return this.dataCommand({name: 'set-state', state: state})
-  }
-
-  async saveNote(noteId: number, text: string, mood: Mood) {
-    return this.dataCommand({name: 'save-note', noteId, text, mood})
-  }
-
-  async setFinishedWriting(hasFinished: boolean) {
-    return this.dataCommand({name: 'set-finished-writing', finished: hasFinished})
-  }
-
-  // END OF API
-
-  async dataCommand<T>(payload: unknown): Promise<T> {
-    if (!this.connected) {
-      throw Error('Cannot send data command on disconnected connection');
+  private sseMonitoring(): void {
+    const sinceLastAlive = (Date.now() - this.sseLastKeepAliveAt!)
+    const laggingNow = (sinceLastAlive > Connection.KEEPALIVE_EXPECTED_INTERVAL_MS)
+    if (this.sseLagging !== laggingNow) {
+      this.sseLagging = laggingNow
+      this.laggingListeners.forEach(l => l(laggingNow));
     }
-
-    return rawCommand(this.baseUrl, {name: 'data', clientId: this.clientId, secret: this.secret, payload: payload})
   }
+
+  private async rawCommand<T>(command: unknown): Promise<T> {
+    return u.withRetry(async () => {
+      const res = await fetch(`${this.baseUrl}/command`, {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(command),
+      }).catch(() => { throw new RetriableError() })
+
+      if (res.status === 200) return res.json()
+
+      const body = await res.text()
+
+      if (body === Connection.UNKNOWN_CLIENT_REQUEST_BODY) {
+        this.handleLostSession()
+        throw new UnknownClientError()
+      } else if (res.status >= 500) {
+        throw new RetriableError()
+      } else {
+        const msg = {command, response: {body, status: res.status}}
+        throw new UnexpectedCommandError(JSON.stringify(msg))
+      }
+    }, {only: [RetriableError]})
+  }
+
+  private static readonly MONITORING_INTERVAL_MS = 2000;
+  private static readonly KEEPALIVE_EXPECTED_INTERVAL_MS = 12000
+  private static readonly UNKNOWN_CLIENT_REQUEST_BODY = "Unknown client\n"
+
 }
 
-function randomID(length: number) {
-  const data = new Uint8Array(length);
-  window.crypto.getRandomValues(data);
-  return trimBase64Padding(btoa(String.fromCharCode.apply(null, data as unknown as number[])).replace(/\+/g, '-').replace(/\//g, '_'));
-}
-
-export function generateClientId(): string {
-  return randomID(CLIENT_ID_LEN)
-}
-
-export function generateSecret(): string {
-  return randomID(SECRET_LEN)
-}
-
-async function rawCommand<T>(baseUrl: string, command: unknown): Promise<T> {
-  return fetch(`${baseUrl}/command`, {
-    method: 'POST',
-    mode: 'same-origin',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(command),
-  }).then(res => {
-    if (res.status !== 200) {
-      throw new Error('Unexpected status code: ' + res.status);
-    }
-
-    return res.json()
-  }).catch(e => {
-    console.error('API command error: ', e);
-    throw e;
-  });
-}
+type LaggingCallback = (connected: boolean) => void;
+type MessageCallback = (message: Message) => void;
+type LostCallback = () => void;
 
 interface HelloResponse {
   eventsUrl: string;
+}
+
+class UnknownClientError extends Error {
+  constructor() {
+    super();
+    this.name = "UnknownClientError";
+  }
+}
+class UnexpectedCommandError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UnexpectedCommandError";
+  }
+}
+class RetriableError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = "RetriableError";
+  }
 }
