@@ -4,6 +4,9 @@ import { trimBase64Padding } from './utils';
 const CLIENT_ID_LEN = 16;
 const SECRET_LEN = 64;
 
+const MONITORING_PACE_MS = 2000;
+const KEEPALIVE_EXPECTED_PACE_MS = 12000
+
 type ConnectionStateChangeCallback = (connected: boolean) => void;
 
 export type Message = {name: string} & Record<string, any>
@@ -13,6 +16,7 @@ export class Connection {
   baseUrl: string
   clientId: string
   secret: string
+  lastKeepAlive?: number
 
   connectionStateChangeListeners: ConnectionStateChangeCallback[] = [];
   messageListeners: MessageCallback[] = [];
@@ -32,32 +36,41 @@ export class Connection {
 
     const res = await rawCommand<HelloResponse>(this.baseUrl, {name: 'hello', clientId: this.clientId, secret: this.secret})
 
-    // console.log('Connection up, events URL: ' + res.eventsUrl)
-
     const eventSource = new EventSource(res.eventsUrl);
     eventSource.onerror = (err) => {
       console.error('Event source error', err);
     }
-    // maybe useless (just for logging)
+
     eventSource.onopen = () => {
-      // Lost connection but can ignore
-      // console.log('Event source connected');
       this.connected = true;
+      this.lastKeepAlive = Date.now()
+      setTimeout(this.monitorConnection, MONITORING_PACE_MS)
       this.connectionStateChangeListeners.forEach(x => x(true));
     }
 
     eventSource.onmessage = (evt) => {
-      // console.log("Event received")
-      // console.log(evt)
-
       const parsed = JSON.parse(evt.data);
 
       if (parsed.event === 'keep-alive') {
-        return;
+        console.log("keep-alive")
+        this.lastKeepAlive = Date.now()
+        return
       }
 
       this.messageListeners.forEach(x => x(parsed));
     }
+  }
+
+  monitorConnection = () => {
+    // console.log(`monitor connection ${Date.now()}`)
+    const timeElapsed = (Date.now() - this.lastKeepAlive!)
+    console.log(timeElapsed)
+    const stillConnected = (timeElapsed < KEEPALIVE_EXPECTED_PACE_MS)
+    if (this.connected !== stillConnected) {
+      this.connected = stillConnected
+      this.connectionStateChangeListeners.forEach(x => x(stillConnected));
+    }
+    setTimeout(this.monitorConnection, MONITORING_PACE_MS)
   }
 
   onConnectionStateChange(callback: (connected: boolean) => void) {
