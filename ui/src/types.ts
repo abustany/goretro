@@ -31,20 +31,28 @@ export interface Note {
 }
 
 export interface State {
+  // Local state
   error?: string;
+  lagging: boolean;
+  name: string;
+  roomId: string;
+
+  // Reflecting BE state
   connected: boolean;
-  name?: string;
   identified: boolean;
-  roomId?: string;
-  room?: Room;
+  room: Room | null;
 }
 
 export type Action = {
-  type: 'connectionStatus';
+  type: 'connectionLagging';
   payload: boolean; // connected or not
 } | {
   type: 'connectionError';
   payload: string; // error message
+} | {
+  type: 'connectionStarted';
+} | {
+  type: 'connectionLost';
 } | {
   type: 'name';
   payload: string; // name
@@ -52,7 +60,7 @@ export type Action = {
   type: 'identifyReceived';
   payload: boolean; // identified or not
 } | {
-  type: 'roomIdSetFromURL';
+  type: 'roomIdSet';
   payload: string; // room ID
 } | {
   type: 'roomReceive';

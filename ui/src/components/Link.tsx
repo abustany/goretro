@@ -24,7 +24,7 @@ export default function({link}: Props) {
     <h2>Invite participants!</h2>
     <div className="Link" onClick={handleCopy}>
       <div className="Link__clipboard">
-        { !clicked && <img src={ClipboardImg}></img> }
+        { !clicked && <img src={ClipboardImg} alt="Copy to Clipboard"></img> }
         { clicked && <span className="retro-font">Copied!</span> }
       </div>
 

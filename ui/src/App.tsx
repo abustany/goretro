@@ -1,6 +1,7 @@
 import React, { useReducer, useEffect, Dispatch } from 'react';
 
-import { Connection } from './connection';
+import { Connection, Message } from './connection';
+import { API } from './api';
 import * as types from './types';
 
 import AppGlobalMessage from './components/AppGlobalMessage';
@@ -12,46 +13,59 @@ import './App.scss'
 
 interface Props {
   connection: Connection
+  api: API
 }
+const nameLocalStorageKey: string = "nickname"
+const ROOMID_PARAM = `id`
 
-export default function({connection}: Props) {
+export default function({connection, api}: Props) {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
     connect(connection, dispatch)
-    readRoomIdFromURL(dispatch)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Identify on name change when connected
+  useEffect(() => {
+    if (state.connected && state.name)
+      api.identify(state.name).then(() => {
+        dispatch({type: 'identifyReceived', payload: true})
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.connected, state.name])
+
+  // Join or Create room when identified
   useEffect(() => {
     if (state.identified) {
       if (state.roomId) {
-        connection.joinRoom(state.roomId)
+        api.joinRoom(state.roomId)
       } else {
-        connection.createRoom()
+        api.createRoom()
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.identified, state.roomId])
 
   return (
     <div className="App">
+      { state.lagging && disconnectedComponent()}
       <Header name={state.name}/>
 
       <main className="App__main">
-        { mainComponent(connection, state, dispatch) }
+        { mainComponent(api, connection.clientId, state, dispatch) }
       </main>
     </div>
   );
 }
 
-function mainComponent(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>) {
+function mainComponent(api: API, userId: string, state: types.State, dispatch: Dispatch<types.Action>) {
   if (state.error) {
     return <AppGlobalMessage title="Error :(">{ state.error }</AppGlobalMessage>
   }
 
   if (!state.name) {
-    return <Login onNameSet={(name) => handleNameSet(connection, dispatch, name) }/>
+    return <Login onNameSet={(name) => handleNameSet(dispatch, name) }/>
   }
 
   if (!state.room) {
@@ -60,139 +74,132 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
 
   return <Room
     room={state.room}
-    userId={connection.clientId}
+    userId={userId}
     link={window.location.toString()}
-    onNoteSave={(mood, text, id) => { handleNoteSave(connection, state, dispatch, mood, text, id) }}
-    onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
-    onHasFinishedWriting={(hasFinished) => { handleFinishedWriting(connection, hasFinished)} }
+    onNoteSave={(mood, text, id) => { handleNoteSave(api, userId, state, dispatch, mood, text, id) }}
+    onStateTransition={() => { handleRoomStateIncrement(api, state) }}
+    onHasFinishedWriting={(hasFinished) => { handleFinishedWriting(api, hasFinished)} }
   />
 }
 
-function handleNameSet(connection: Connection, dispatch: Dispatch<types.Action>, name: string): void {
-  dispatch({type: 'name', payload: name})
-  connection.identify(name).then(() => {
-    dispatch({type: 'identifyReceived', payload: true})
-  })
+const disconnectedComponent = () => <div className="App_warning">
+  <div>Reconnecting...</div>
+  <div className="indication">The connection has been lost, you may not be up to date.</div>
+</div>
+
+function handleNameSet(dispatch: Dispatch<types.Action>, name: string): void {
+  const trimmedName = name.trim()
+  if (!trimmedName) return
+  localStorage.setItem(nameLocalStorageKey, trimmedName)
+
+  dispatch({type: 'name', payload: trimmedName})
 }
 
-function handleRoomStateIncrement(connection: Connection, state: types.State): void {
-  connection.setRoomState(state.room!.state + 1)
+function handleRoomStateIncrement(api: API, state: types.State): void {
+  api.setRoomState(state.room!.state + 1)
 }
 
-function handleNoteSave(connection: Connection, state: types.State, dispatch: Dispatch<types.Action>, mood: types.Mood, text: string, id?: number): void {
-  if (id !== undefined) {
-    dispatch({type: 'noteUpdated', payload: {noteId: id, text: text}})
-    connection.saveNote(id, text, mood)
+function handleNoteSave(api: API, userId: string, state: types.State, dispatch: Dispatch<types.Action>, mood: types.Mood, text: string, noteId?: number): void {
+  if (noteId !== undefined) {
+    dispatch({type: 'noteUpdated', payload: {noteId: noteId, text: text}})
+    api.saveNote(noteId, text, mood)
   } else {
     const note = {
-      authorId: connection.clientId,
-      id: id || state.room!.notes.length,
+      authorId: userId,
+      id: noteId || state.room!.notes.length,
       text: text,
       mood: mood,
     }
     dispatch({type: 'noteCreated', payload: note})
-    connection.saveNote(note.id, note.text, note.mood)
+    api.saveNote(note.id, note.text, note.mood)
   }
 }
 
-function handleFinishedWriting(connection: Connection, hasFinished: boolean) {
-  connection.setFinishedWriting(hasFinished)
+function handleFinishedWriting(api: API, hasFinished: boolean) {
+  api.setFinishedWriting(hasFinished)
+}
+
+function handleMessage(message: Message, dispatch: Dispatch<types.Action>): void {
+  switch (message.event) {
+    case "state-changed":
+      dispatch({type: 'roomStateChanged', payload: message.payload})
+      break
+    case "current-state":
+      // TODO(charles): change when BE changes.
+      const room = message.payload
+      room.notes = restructureRoomNotes(room.notes)
+      // Change URL
+      writeRoomIdInURL(message.payload.id)
+      dispatch({type: 'roomReceive', payload: room})
+      break
+    case "participant-added":
+      dispatch({type: 'roomParticipantAdd', payload: message.payload})
+      break
+    case "participant-removed":
+      dispatch({type: 'roomParticipantRemoved', payload: message.payload})
+      break
+    case "participant-updated":
+      dispatch({type: 'roomParticipantUpdated', payload: message.payload})
+      break
+    case "host-changed":
+      dispatch({type: 'hostChange', payload: message.payload})
+      break
+  }
 }
 
 // Connect the EventSource to the State via Actions.
 function connect(connection: Connection, dispatch: Dispatch<types.Action>): void {
   connection.onMessage((message) => {
-    switch (message.event) {
-      case "state-changed":
-        dispatch({type: 'roomStateChanged', payload: message.payload})
-        break
-      case "current-state":
-        // TODO(charles): change when BE changes.
-        const room = message.payload
-        room.notes = restructureRoomNotes(room.notes)
-        // Change URL
-        writeRoomIdInURL(message.payload.id)
-        dispatch({type: 'roomReceive', payload: room})
-        break
-      case "participant-added":
-        dispatch({type: 'roomParticipantAdd', payload: message.payload})
-        break
-      case "participant-removed":
-        dispatch({type: 'roomParticipantRemoved', payload: message.payload})
-        break
-      case "participant-updated":
-        dispatch({type: 'roomParticipantUpdated', payload: message.payload})
-        break
-      case "host-changed":
-        dispatch({type: 'hostChange', payload: message.payload})
-        break
-    }
+    handleMessage(message, dispatch)
   });
 
-  connection.onConnectionStateChange((connected) => {
-    dispatch({type: 'connectionStatus', payload: connected})
+  connection.onLagging((lagging) => {
+    dispatch({type: 'connectionLagging', payload: lagging})
+  });
+
+  connection.onLost(() => {
+    dispatch({type: 'connectionLost'})
   });
 
   connection.start().then(() => {
-    // Connected
+    dispatch({type: 'connectionStarted'})
   }).catch((err) => {
     dispatch({type: 'connectionError', payload: err.toString()})
   })
 }
 
-// URL
-
-const ROOMID_PARAM = `id`
-
-function writeRoomIdInURL(roomId: string) {
-  window.history.replaceState(null, document.title, `/?${ROOMID_PARAM}=${roomId}`);
-}
-
-function readRoomIdFromURL(dispatch: Dispatch<types.Action>): void {
-  const roomId = (new URL(window.location.toString())).searchParams.get(ROOMID_PARAM)
-  if (!roomId) {
-    return
-  }
-  dispatch({type: 'roomIdSetFromURL', payload: roomId})
-}
-
 // State
 
 const initialState: types.State = {
+  lagging: false,
+  name: localStorage.getItem(nameLocalStorageKey) || "",
+  roomId: readRoomIdFromURL() || "",
+  room: null,
+
   connected: false,
   identified: false,
 }
 
-// // Go to Room:
-// const initialState: types.State = {
-//   connected: false,
-//   identified: false,
-//   name: "Charles",
-//   room: {
-//     state: 2,
-//     hostId: "111",
-//     notes: [
-//       {authorId: "111", id: 1, text: "Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out print, graphic or web designs. The passage is attributed to an unknown typesetter in the 15th century who is thought to have scrambled parts of Cicero's De Finibus Bonorum. Lorem ipsum, or lips", mood: 2},
-//       {authorId: "111", id: 2, text: "Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out print, graphic or web designs. The passage is attributed to an unknown typesetter in the 15th century who is thought to have scrambled parts of Cicero's De Finibus Bonorum.", mood: 2},
-//     ],
-//     participants: [
-//       {name: "Charles", clientId: "111"}
-//     ]
-//   }
-// }
-
 function reducer(state: types.State, action: types.Action): types.State {
   switch (action.type) {
-    case 'connectionStatus':
-      return {...state, connected: action.payload}
+    case 'connectionLagging':
+      return {...state, lagging: action.payload}
     case 'connectionError':
       return {...state, error: action.payload}
+    case 'connectionStarted':
+      return {...state, connected: true}
+    case 'connectionLost':
+      return {
+        ...state,
+        connected: false,
+        identified: false,
+        room: null,
+      }
     case 'name':
       return {...state, name: action.payload}
     case 'identifyReceived':
       return {...state, identified: action.payload}
-
-    case 'roomIdSetFromURL':
+    case 'roomIdSet':
       return {...state, roomId: action.payload}
     case 'roomReceive':
       return {...state, room: action.payload}
@@ -243,7 +250,7 @@ function reducer(state: types.State, action: types.Action): types.State {
       }
     case 'noteUpdated':
       const {noteId, text} = action.payload
-      const notes = [...state.room!.notes] // copy
+      const notes = [...state.room!.notes]
       const noteIndex = notes.findIndex((n: types.Note) => n.id === noteId)!
       notes[noteIndex] = {
         ...notes[noteIndex],
@@ -263,4 +270,15 @@ function reducer(state: types.State, action: types.Action): types.State {
 
 function restructureRoomNotes(notes: {[clientId: string]: types.Note[]}): types.Note[] {
   return Object.values(notes).flat();
+}
+
+// URL
+
+function writeRoomIdInURL(roomId: string) {
+  window.history.replaceState(null, document.title, `/?${ROOMID_PARAM}=${roomId}`);
+}
+
+function readRoomIdFromURL(): string | null {
+  const roomId = (new URL(window.location.toString())).searchParams.get(ROOMID_PARAM)
+  return roomId || null
 }
