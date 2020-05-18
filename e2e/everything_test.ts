@@ -59,13 +59,13 @@ Scenario('Test everything', async (I) => {
   });
 
   // Edit a note
-  editNote(I, notes[1].text, notes[1].finalText)
+  editNoteAndSave(I, notes[1].text, notes[1].finalText)
 
   // Edit & Cancel a note
-  editCancelNote(I, notes[2].text)
+  editNoteAndCancel(I, notes[2].text)
 
   // Delete a note
-  notes.filter((n) => n.deleted).forEach((n) => editDeleteNote(I, n.text))
+  notes.filter((n) => n.deleted).forEach((n) => editNoteAndDelete(I, n.text))
 
   // Close the retro
   I.click('$room-close');
@@ -110,52 +110,39 @@ function saveNote(I: CodeceptJS.I, mood: Mood, text: string) {
   I.click(locate('$noteeditor-save').inside(columnTestId(mood)));
 }
 
-function editNote(I: CodeceptJS.I, initialText: string, correctedText: string) {
-  const editBtn = locateAfter(locate('$noteeditor-edit'), locate('*').withText(initialText)).first()
-  I.click(editBtn)
-  const textArea = locate('*').withText(initialText).first()
-  const saveBtn = locateAfter(locate('$noteeditor-save'), locate('*').withText(initialText)).first()
-
-  I.fillField(textArea, correctedText)
-  I.click(saveBtn)
+function noteLocator() {
+  return locate({css: 'div.Note'});
 }
 
-function editCancelNote(I: CodeceptJS.I, initialText: string) {
-  const editBtn = locateAfter(locate('$noteeditor-edit'), locate('*').withText(initialText)).first()
-  I.click(editBtn)
-  const textArea = locate('*').withText(initialText).first()
-  const cancelBtn = locateAfter(locate('$noteeditor-cancel'), locate('*').withText(initialText)).first()
-
-  I.fillField(textArea, "about anything")
-  I.click(cancelBtn)
+function editNote(I: CodeceptJS.I, initialText: string, correctedText: string, buttonId: string) {
+  const note = noteLocator().withText(initialText);
+  I.click(locate('$noteeditor-edit').inside(note));
+  I.fillField(locate('$noteeditor-text').inside(note), correctedText);
+  I.click(locate(buttonId).inside(noteLocator().withText(correctedText)));
 }
 
-function editDeleteNote(I: CodeceptJS.I, initialText: string) {
-  const editBtn = locateAfter(locate('$noteeditor-edit'), locate('*').withText(initialText)).first()
-  I.click(editBtn)
-  const textArea = locate('*').withText(initialText).first()
-  const deleteBtn = locateAfter(locate('$noteeditor-delete'), locate('*').withText(initialText)).first()
+function editNoteAndSave(I: CodeceptJS.I, initialText: string, correctedText: string) {
+  editNote(I, initialText, correctedText, '$noteeditor-save');
+}
 
-  I.fillField(textArea, "about anything")
-  I.click(deleteBtn)
+function editNoteAndCancel(I: CodeceptJS.I, initialText: string) {
+  editNote(I, initialText, 'about anything', '$noteeditor-cancel');
+}
+
+function editNoteAndDelete(I: CodeceptJS.I, initialText: string) {
+  editNote(I, initialText, 'about anything', '$noteeditor-delete');
 }
 
 function iSeeNote(I: CodeceptJS.I, mood: Mood, text: string, author?: string) {
-  const noteLocator = locate({css: 'div.Note'}).inside(columnTestId(mood));
-  I.see(text, noteLocator);
+  const l = noteLocator().inside(columnTestId(mood));
+  I.see(text, l);
 
   if (author) {
-    I.see(author, noteLocator)
+    I.see(author, l)
   }
 }
 
 function saveAndCheckNote(I: CodeceptJS.I, mood: Mood, text: string) {
   saveNote(I, mood, text);
   iSeeNote(I, mood, text)
-}
-
-function locateAfter(after: CodeceptJS.Locator, before: CodeceptJS.Locator): CodeceptJS.Locator {
-  return locate({xpath:
-    after.after(before).toXPath().replace("preceding-sibling::", "preceding::")
-  })
 }
