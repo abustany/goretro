@@ -1,6 +1,6 @@
 import React, { useReducer, useEffect, Dispatch } from 'react';
 
-import { Connection } from './connection';
+import { Connection, Message } from './connection';
 import * as types from './types';
 
 import AppGlobalMessage from './components/AppGlobalMessage';
@@ -99,35 +99,37 @@ function handleFinishedWriting(connection: Connection, hasFinished: boolean) {
   connection.setFinishedWriting(hasFinished)
 }
 
+function handleMessage(message: Message, dispatch: Dispatch<types.Action>): void {
+  switch (message.event) {
+    case "state-changed":
+      dispatch({type: 'roomStateChanged', payload: message.payload})
+      break
+    case "current-state":
+      // TODO(charles): change when BE changes.
+      const room = message.payload
+      room.notes = restructureRoomNotes(room.notes)
+      // Change URL
+      writeRoomIdInURL(message.payload.id)
+      dispatch({type: 'roomReceive', payload: room})
+      break
+    case "participant-added":
+      dispatch({type: 'roomParticipantAdd', payload: message.payload})
+      break
+    case "participant-removed":
+      dispatch({type: 'roomParticipantRemoved', payload: message.payload})
+      break
+    case "participant-updated":
+      dispatch({type: 'roomParticipantUpdated', payload: message.payload})
+      break
+    case "host-changed":
+      dispatch({type: 'hostChange', payload: message.payload})
+      break
+  }
+}
+
 // Connect the EventSource to the State via Actions.
 function connect(connection: Connection, dispatch: Dispatch<types.Action>): void {
-  connection.onMessage((message) => {
-    switch (message.event) {
-      case "state-changed":
-        dispatch({type: 'roomStateChanged', payload: message.payload})
-        break
-      case "current-state":
-        // TODO(charles): change when BE changes.
-        const room = message.payload
-        room.notes = restructureRoomNotes(room.notes)
-        // Change URL
-        writeRoomIdInURL(message.payload.id)
-        dispatch({type: 'roomReceive', payload: room})
-        break
-      case "participant-added":
-        dispatch({type: 'roomParticipantAdd', payload: message.payload})
-        break
-      case "participant-removed":
-        dispatch({type: 'roomParticipantRemoved', payload: message.payload})
-        break
-      case "participant-updated":
-        dispatch({type: 'roomParticipantUpdated', payload: message.payload})
-        break
-      case "host-changed":
-        dispatch({type: 'hostChange', payload: message.payload})
-        break
-    }
-  });
+  connection.onMessage((message) => { handleMessage(message, dispatch) });
 
   connection.onConnectionStateChange((connected) => {
     dispatch({type: 'connectionStatus', payload: connected})

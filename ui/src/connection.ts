@@ -6,7 +6,7 @@ const SECRET_LEN = 64;
 
 type ConnectionStateChangeCallback = (connected: boolean) => void;
 
-type Message = {name: string} & Record<string, any>
+export type Message = {name: string} & Record<string, any>
 type MessageCallback = (message: Message) => void;
 
 export class Connection {
