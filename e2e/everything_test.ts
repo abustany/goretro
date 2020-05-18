@@ -110,14 +110,15 @@ function saveNote(I: CodeceptJS.I, mood: Mood, text: string) {
   I.click(locate('$noteeditor-save').inside(columnTestId(mood)));
 }
 
-function editNote(I: CodeceptJS.I, initialText: string, correctedText: string) {
-  const editBtn = locateAfter(locate('$noteeditor-edit'), locate('*').withText(initialText)).first()
-  I.click(editBtn)
-  const textArea = locate('*').withText(initialText).first()
-  const saveBtn = locateAfter(locate('$noteeditor-save'), locate('*').withText(initialText)).first()
+function noteLocator() {
+  return locate({css: 'div.Note'});
+}
 
-  I.fillField(textArea, correctedText)
-  I.click(saveBtn)
+function editNote(I: CodeceptJS.I, initialText: string, correctedText: string) {
+  const note = noteLocator().withText(initialText);
+  I.click(locate('$noteeditor-edit').inside(note));
+  I.fillField(locate('$noteeditor-text').inside(note), correctedText);
+  I.click(locate('$noteeditor-save').inside(noteLocator().withText(correctedText)));
 }
 
 function editCancelNote(I: CodeceptJS.I, initialText: string) {
@@ -141,11 +142,11 @@ function editDeleteNote(I: CodeceptJS.I, initialText: string) {
 }
 
 function iSeeNote(I: CodeceptJS.I, mood: Mood, text: string, author?: string) {
-  const noteLocator = locate({css: 'div.Note'}).inside(columnTestId(mood));
-  I.see(text, noteLocator);
+  const l = noteLocator().inside(columnTestId(mood));
+  I.see(text, l);
 
   if (author) {
-    I.see(author, noteLocator)
+    I.see(author, l)
   }
 }
 
