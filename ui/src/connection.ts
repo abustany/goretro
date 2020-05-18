@@ -34,7 +34,7 @@ export class Connection {
       return;
     }
 
-    const res = await rawCommand<HelloResponse>(this.baseUrl, {name: 'hello', clientId: this.clientId, secret: this.secret})
+    const res = await this.hello()
 
     const eventSource = new EventSource(res.eventsUrl);
     eventSource.onerror = (err) => {
@@ -44,7 +44,7 @@ export class Connection {
     eventSource.onopen = () => {
       this.connected = true;
       this.lastKeepAlive = Date.now()
-      setTimeout(this.monitorConnection, MONITORING_PACE_MS)
+      this.startMonitoringConnection()
       this.connectionStateChangeListeners.forEach(x => x(true));
     }
 
@@ -72,6 +72,7 @@ export class Connection {
     }
     setTimeout(this.monitorConnection, MONITORING_PACE_MS)
   }
+  startMonitoringConnection = () => setTimeout(this.monitorConnection, MONITORING_PACE_MS)
 
   onConnectionStateChange(callback: (connected: boolean) => void) {
     this.connectionStateChangeListeners.push(callback);
@@ -79,6 +80,10 @@ export class Connection {
 
   onMessage(callback: (msg: Message) => void) {
     this.messageListeners.push(callback);
+  }
+
+  async hello() {
+    return rawCommand<HelloResponse>(this.baseUrl, {name: 'hello', clientId: this.clientId, secret: this.secret})
   }
 
   // API

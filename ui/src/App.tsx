@@ -34,8 +34,14 @@ export default function({connection}: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.identified, state.roomId])
 
+  const disconnectedComponent = () => <div className="App_warning">
+    <div>⚠ Disconnected</div>
+    <div className="indication">Please refresh page</div>
+  </div>
+
   return (
     <div className="App">
+      { !state.connected && disconnectedComponent()}
       <Header name={state.name}/>
 
       <main className="App__main">
@@ -132,6 +138,7 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
   connection.onMessage((message) => { handleMessage(message, dispatch) });
 
   connection.onConnectionStateChange((connected) => {
+    console.log("Connection State Changed !!")
     dispatch({type: 'connectionStatus', payload: connected})
   });
 
