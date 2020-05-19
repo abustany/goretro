@@ -17,6 +17,7 @@ export class Connection {
   clientId: string
   secret: string
   lastKeepAlive?: number
+  firstConnectionPromise?: Promise<unknown>
 
   connectionStateChangeListeners: ConnectionStateChangeCallback[] = [];
   messageListeners: MessageCallback[] = [];
@@ -34,6 +35,12 @@ export class Connection {
       return;
     }
 
+    // Create an un-resolved Promise and keep a ref of the solver.
+    let solver: (value?: unknown) => void
+    this.firstConnectionPromise = new Promise((resolve, _) => {
+      solver = resolve
+    })
+
     const res = await this.hello()
 
     const eventSource = new EventSource(res.eventsUrl);
@@ -42,6 +49,7 @@ export class Connection {
     }
 
     eventSource.onopen = () => {
+      solver()
       this.connected = true;
       this.lastKeepAlive = Date.now()
       this.startMonitoringConnection()
@@ -52,7 +60,6 @@ export class Connection {
       const parsed = JSON.parse(evt.data);
 
       if (parsed.event === 'keep-alive') {
-        console.log("keep-alive")
         this.lastKeepAlive = Date.now()
         return
       }
@@ -62,9 +69,7 @@ export class Connection {
   }
 
   monitorConnection = () => {
-    // console.log(`monitor connection ${Date.now()}`)
     const timeElapsed = (Date.now() - this.lastKeepAlive!)
-    console.log(timeElapsed)
     const stillConnected = (timeElapsed < KEEPALIVE_EXPECTED_PACE_MS)
     if (this.connected !== stillConnected) {
       this.connected = stillConnected
@@ -116,11 +121,9 @@ export class Connection {
   // END OF API
 
   async dataCommand<T>(payload: unknown): Promise<T> {
-    if (!this.connected) {
-      throw Error('Cannot send data command on disconnected connection');
-    }
-
-    return rawCommand(this.baseUrl, {name: 'data', clientId: this.clientId, secret: this.secret, payload: payload})
+    return this.firstConnectionPromise!.then(() =>
+      rawCommand(this.baseUrl, {name: 'data', clientId: this.clientId, secret: this.secret, payload: payload})
+    )
   }
 }
 

@@ -138,7 +138,6 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
   connection.onMessage((message) => { handleMessage(message, dispatch) });
 
   connection.onConnectionStateChange((connected) => {
-    console.log("Connection State Changed !!")
     dispatch({type: 'connectionStatus', payload: connected})
   });
 
