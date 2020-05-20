@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function({participants, hostId, userId}: Props){
-  return <div>
+  return <div className="Participants">
     <h2>Online ({ participants.size })</h2>
     <ul>{ Array.from(participants.values()).map(el => {
       let badgesArr = []

@@ -23,6 +23,7 @@ interface Props {
   onNoteSave: (mood: types.Mood, text: string, id?: number) => void;
   onStateTransition: () => void;
 }
+
 export default function({room, userId, link, onNoteSave, onStateTransition}: Props) {
   const participants = normalizeParticipants(room.participants)
   const notesByMood = sortNotesByMoods(room.notes)
@@ -31,7 +32,7 @@ export default function({room, userId, link, onNoteSave, onStateTransition}: Pro
   const isRunning = room.state === types.RoomState.RUNNING
 
   return <div className="Room">
-    { !isWaiting && <div className="Room__columns">
+    { !isWaiting && <div className="Room__notes">
       { [types.Mood.POSITIVE, types.Mood.NEGATIVE, types.Mood.CONFUSED].map((mood, index) =>
         <Column
           key={mood}
@@ -46,12 +47,19 @@ export default function({room, userId, link, onNoteSave, onStateTransition}: Pro
       ) }
     </div> }
 
-    <div className={`Room__footer ${isWaiting ? null : "Room__footer--btm"}`}>
-      <Participants participants={participants} hostId={room.hostId} userId={userId}/>
+    <div className="Room__info">
+      <div className="Room__info-centered">
+        <StatusParticipant state={room.state}/>
+        { isWaiting && <Link link={link}/> }
+      </div>
 
-      { isWaiting && <Link link={link}/> }
+      <div className="Room__info-bottom">
+        <Participants participants={participants} hostId={room.hostId} userId={userId}/>
+      </div>
+    </div>
 
-      { isHost ? <StatusHost state={room.state} onStateTransition={onStateTransition}/> : <StatusParticipant state={room.state}/> }
+    <div className="Room__host">
+      { isHost && <StatusHost state={room.state} onStateTransition={onStateTransition}/> }
     </div>
   </div>
 }

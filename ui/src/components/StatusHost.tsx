@@ -6,8 +6,8 @@ import './StatusHost.scss'
 
 const stateDescription = {
   [t.RoomState.WAITING_FOR_PARTICIPANTS]: "Press start when everyone is ready.",
-  [t.RoomState.RUNNING]: "Time to write notes!",
-  [t.RoomState.REVIEWING]: "Review & Action points",
+  [t.RoomState.RUNNING]: "Give participants time to write notes.",
+  [t.RoomState.REVIEWING]: null,
 }
 
 const nextButton = {
@@ -21,14 +21,13 @@ interface Props {
   onStateTransition: () => void;
 }
 export default function({state, onStateTransition}: Props) {
-  const hostButton = () => {
-    const btn = nextButton[state]
-    if (!btn) return null
-    return <button onClick={onStateTransition} data-test-id={btn.testId}>{ btn.text }</button>
-  }
+  const btn = nextButton[state]
+  const descr = stateDescription[state]
 
-  return <div>
-    { hostButton() }
-    <p className="Room__status">{ stateDescription[state] }</p>
+  if (!descr && !btn) return null
+  return <div className="StatusHost">
+    <h2>Host Controls</h2>
+    { btn && <button onClick={onStateTransition} data-test-id={btn.testId}>{ btn.text }</button> }
+    { descr && <div className="Room__status">{ descr }</div> }
   </div>
 }

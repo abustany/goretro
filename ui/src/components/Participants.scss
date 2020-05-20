@@ -1,5 +1,25 @@
 @import "../stylesheets/config.scss";
 
+.Participants {
+  ul {
+    text-align: left;
+    display: inline-block;
+    margin: 0 auto;
+    list-style: none;
+    // padding-left: 20px;
+    padding-left: 0;
+
+    li:not(:last-child) {
+      margin-bottom: 0.5rem;
+    }
+
+    li:before {
+      content: "►";
+      padding-right: 10px;
+    }
+  }
+}
+
 .Participants__flag {
   color: $redAltColor;
 }
