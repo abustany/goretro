@@ -6,6 +6,7 @@ const SECRET_LEN = 64;
 
 const MONITORING_PACE_MS = 2000;
 const KEEPALIVE_EXPECTED_PACE_MS = 12000
+const DROPPED_SESSION_BODY = "Unknown client\n"
 
 type ConnectionStateChangeCallback = (connected: boolean) => void;
 
@@ -141,26 +142,50 @@ export function generateSecret(): string {
   return randomID(SECRET_LEN)
 }
 
-async function rawCommand<T>(baseUrl: string, command: unknown): Promise<T> {
-  return fetch(`${baseUrl}/command`, {
-    method: 'POST',
-    mode: 'same-origin',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(command),
-  }).then(res => {
-    if (res.status !== 200) {
-      throw new Error('Unexpected status code: ' + res.status);
+async function rawCommand<T>(baseUrl: string, command: unknown, attempt?: number): Promise<T> {
+  if (attempt === undefined) attempt = 1
+
+  const retry = async () => {
+    const wait = Math.min((2 ** (attempt! - 1)) * 100, 10000)
+    await sleep(wait)
+    return rawCommand<T>(baseUrl, command, attempt! + 1)
+  }
+
+  let res;
+  try {
+    res = await fetch(`${baseUrl}/command`, {
+      method: 'POST',
+      mode: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(command),
+    })
+  } catch(e) {
+    // console.error('API command error: ', e);
+    // console.log(e)
+    // throw e;
+    return await retry()
+  }
+
+  if (res.status !== 200) {
+    const body = await res.text()
+
+    if (body === DROPPED_SESSION_BODY) {
+      // TODO: Do Hello() again (prob not smart because the whole room has been deleted)
+      //  or trigger a new onError event instead.
+      throw new Error('Session has expired.')
     }
 
-    return res.json()
-  }).catch(e => {
-    console.error('API command error: ', e);
-    throw e;
-  });
-}
+    // TODO: Only retry known networking errors?
+    return await retry()
+  }
 
+  return res.json()
+}
+const sleep = (ms: number) => {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 interface HelloResponse {
   eventsUrl: string;
 }
