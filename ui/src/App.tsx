@@ -10,6 +10,8 @@ import Room from './components/Room';
 
 import './App.scss'
 
+const DISCONNECTION_WARNING_AFTER_MS = 3000
+
 interface Props {
   connection: Connection
 }
@@ -34,14 +36,9 @@ export default function({connection}: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.identified, state.roomId])
 
-  const disconnectedComponent = () => <div className="App_warning">
-    <div>⚠ Disconnected</div>
-    <div className="indication">Please refresh page</div>
-  </div>
-
   return (
     <div className="App">
-      { !state.connected && disconnectedComponent()}
+      { !state.connected && state.connectedExpected && disconnectedComponent()}
       <Header name={state.name}/>
 
       <main className="App__main">
@@ -73,6 +70,11 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
     onHasFinishedWriting={(hasFinished) => { handleFinishedWriting(connection, hasFinished)} }
   />
 }
+
+const disconnectedComponent = () => <div className="App_warning">
+  <div>Reconnecting...</div>
+  <div className="indication">The connection has been lost, you may not be uptodate.</div>
+</div>
 
 function handleNameSet(connection: Connection, dispatch: Dispatch<types.Action>, name: string): void {
   dispatch({type: 'name', payload: name})
@@ -141,6 +143,10 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
     dispatch({type: 'connectionStatus', payload: connected})
   });
 
+  setTimeout(() => {
+    dispatch({type: 'connectedExpected'})
+  }, DISCONNECTION_WARNING_AFTER_MS)
+
   connection.start().then(() => {
     // Connected
   }).catch((err) => {
@@ -168,6 +174,7 @@ function readRoomIdFromURL(dispatch: Dispatch<types.Action>): void {
 
 const initialState: types.State = {
   connected: false,
+  connectedExpected: false,
   identified: false,
 }
 
@@ -193,6 +200,8 @@ function reducer(state: types.State, action: types.Action): types.State {
   switch (action.type) {
     case 'connectionStatus':
       return {...state, connected: action.payload}
+    case 'connectedExpected':
+      return {...state, connectedExpected: true}
     case 'connectionError':
       return {...state, error: action.payload}
     case 'name':

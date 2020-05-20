@@ -33,6 +33,7 @@ export interface Note {
 export interface State {
   error?: string;
   connected: boolean;
+  connectedExpected: boolean;
   name?: string;
   identified: boolean;
   roomId?: string;
@@ -45,6 +46,8 @@ export type Action = {
 } | {
   type: 'connectionError';
   payload: string; // error message
+} | {
+  type: 'connectedExpected';
 } | {
   type: 'name';
   payload: string; // name
