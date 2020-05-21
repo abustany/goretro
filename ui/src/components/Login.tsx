@@ -15,8 +15,9 @@ export default function({onNameSet}: LoginProps) {
 
   const handleSetName = () => {
     if (name) {
-      localStorage.setItem(nameLocalStorageKey, name)
-      onNameSet(name);
+      const trimmedName = name.trim()
+      localStorage.setItem(nameLocalStorageKey, trimmedName)
+      onNameSet(trimmedName);
     }
   }
 
