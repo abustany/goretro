@@ -6,7 +6,7 @@ import './Note.scss'
 
 interface Props {
   note?: types.Note;
-  participants: Map<string, types.Participant>;
+  author?: string;
   editable: boolean;
   onNoteSave: (text: string, id?: number) => void;
   tabIndex?: number
@@ -15,7 +15,7 @@ interface Props {
 // If `note` is present, behaves as an Note that can be edited or deleted.
 // Otherwise, behaves as a Note creator that gets empty after edition.
 // `note` is not meant to change over the lifetime.
-export default function({note, editable, participants, onNoteSave, tabIndex}: Props) {
+export default function({note, author, editable, onNoteSave, tabIndex}: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [editedText, setEditedText] = useState<string>("")
   const isCreate = !note
@@ -26,7 +26,7 @@ export default function({note, editable, participants, onNoteSave, tabIndex}: Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editedText])
 
-  const author = note ? (participants.get(note.authorId)?.name || "Unknown author") : null
+  author = author || "Unknown author"
 
   // Callbacks
 

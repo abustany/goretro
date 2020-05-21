@@ -25,18 +25,12 @@ interface Props {
 }
 
 export default function({room, userId, link, onNoteSave, onStateTransition}: Props) {
-  const participants = normalizeParticipants(room.participants)
-  const notesByMood = sortNotesByMoods(room.notes)
+  const nameById = idToName(room.participants)
+  const notesByMood = moodToNotes(room.notes)
   const isHost = userId === room.hostId
   const isWaiting = room.state === t.RoomState.WAITING_FOR_PARTICIPANTS
   const isRunning = room.state === t.RoomState.RUNNING
   const isReviewing = room.state === t.RoomState.REVIEWING
-
-  const handleExport = () => {
-    const now = new Date()
-    const fileName = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}-retrospective.json`
-    saveData(fileName, JSON.stringify(buildExportData(room.notes, room.participants), null, 2))
-  }
 
   return <div className="Room">
     { !isWaiting && <div className="Room__notes">
@@ -45,7 +39,7 @@ export default function({room, userId, link, onNoteSave, onStateTransition}: Pro
           key={mood}
           icon={ moodIcons[mood] }
           editable={isRunning}
-          participants={participants}
+          participants={nameById}
           notes={ notesByMood[mood] }
           onNoteSave={ (text, id) => onNoteSave(mood, text, id) }
           data-test-id={ "room-column-" + t.Mood[mood].toLowerCase() }
@@ -61,8 +55,8 @@ export default function({room, userId, link, onNoteSave, onStateTransition}: Pro
       </div>
 
       <div className="Room__info-bottom">
-        { isReviewing && <button onClick={handleExport}>Export</button> }
-        <Participants participants={participants} hostId={room.hostId} userId={userId}/>
+        { isReviewing && <button onClick={() => handleExport(room.notes, nameById)}>Export</button> }
+        <Participants participants={nameById} hostId={room.hostId} userId={userId}/>
       </div>
     </div>
 
@@ -72,7 +66,7 @@ export default function({room, userId, link, onNoteSave, onStateTransition}: Pro
   </div>
 }
 
-function sortNotesByMoods(notes: t.Note[]): { [key: number]: t.Note[] } {
+function moodToNotes(notes: t.Note[]): { [key: number]: t.Note[] } {
   const notesByMood: { [key: number]: t.Note[] } = {
     [t.Mood.POSITIVE]: [],
     [t.Mood.NEGATIVE]: [],
@@ -84,41 +78,9 @@ function sortNotesByMoods(notes: t.Note[]): { [key: number]: t.Note[] } {
   return notesByMood
 }
 
-function normalizeParticipants(arr: t.Participant[]): Map<string, t.Participant> {
-  return arr.reduce((map, el) => map.set(el.clientId, el), new Map())
-}
-
-const saveData = (fileName: string, data: string) => {
-  const a = document.createElement("a");
-  document.body.appendChild(a);
-  a.style.cssText = "display: none;";
-
-  const blob = new Blob([data], {type: "octet/stream"})
-  const url = window.URL.createObjectURL(blob)
-
-  a.href = url;
-  a.download = fileName;
-  a.click();
-  window.URL.revokeObjectURL(url);
-  a.remove();
-}
-
-function buildExportData(notes: t.Note[], participants: t.Participant[]): any {
-  const idsToName = participantIdToName(participants)
-  const res: any[] = []
-  notes.forEach(n => {
-    res.push({
-      mood: moodIcons[n.mood],
-      content: n.text,
-      author: idsToName.get(n.authorId),
-    })
-  })
-  return res
-}
-
 // Return a mapping of ID the corresponding participant name PLUS a number if needed to make the name unique.
 // e.g. { AH13ubga71ef901: "Joe (1)", 9nd16vf00shBBs: "Joe (2)"}
-function participantIdToName(participants: t.Participant[]): Map<string, string> {
+function idToName(participants: t.Participant[]): Map<string, string> {
   const nameToIDs = new Map<string, string[]>()
   participants.forEach(p => {
     let ids = nameToIDs.get(p.name)
@@ -141,4 +103,51 @@ function participantIdToName(participants: t.Participant[]): Map<string, string>
   })
 
   return res
+}
+
+// Export
+
+function handleExport(notes: t.Note[], participants: Map<string, string>) {
+  const now = new Date()
+  triggerDownload(
+    exportFileName(now),
+    JSON.stringify(buildExportData(notes, participants, now), null, 2)
+  )
+}
+
+function triggerDownload(fileName: string, data: string) {
+  const a = document.createElement("a");
+  document.body.appendChild(a);
+  a.style.cssText = "display: none;";
+
+  const blob = new Blob([data], {type: "octet/stream"})
+  const url = window.URL.createObjectURL(blob)
+
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  window.URL.revokeObjectURL(url);
+  a.remove();
+}
+
+function exportFileName(date: Date): string {
+  const formattedDate = date.toISOString().split("T")[0]
+  return `${formattedDate}-retrospective.json`
+}
+
+function buildExportData(notes: t.Note[], participants: Map<string, string>, date: Date): any {
+  const resNotes: any[] = []
+
+  notes.forEach(n => {
+    resNotes.push({
+      mood: moodIcons[n.mood],
+      content: n.text,
+      author: participants.get(n.authorId),
+    })
+  })
+
+  return {
+    date: date.toISOString(),
+    notes: resNotes,
+  }
 }
