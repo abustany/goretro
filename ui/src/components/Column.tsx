@@ -8,19 +8,19 @@ interface Props {
   editable: boolean;
   icon: string;
   notes: types.Note[];
-  participants: Map<string, types.Participant>;
+  participants: Map<string, string>;
   onNoteSave: (text: string, id?: number) => void;
   tabIndex: number;
 }
 
 export default function({editable, icon, notes, participants, onNoteSave, tabIndex, ...rest}: Props) {
   const noteComponents = notes.filter((n) => n.text !== "").map((n) => <Note
-      key={n.authorId + n.id}
+    key={n.authorId + n.id}
 
-      note={n}
-      editable={editable}
-      participants={participants}
-      onNoteSave={onNoteSave}
+    note={n}
+    author={participants.get(n.authorId)}
+    editable={editable}
+    onNoteSave={onNoteSave}
   />)
 
   if (editable) {
@@ -28,10 +28,9 @@ export default function({editable, icon, notes, participants, onNoteSave, tabInd
       key="editor"
 
       editable={editable}
-      participants={participants}
       onNoteSave={onNoteSave}
       tabIndex={tabIndex}
-      />)
+    />)
   }
 
   return <div className='Column' {...rest}>
