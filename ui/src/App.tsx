@@ -106,7 +106,7 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
         const room = message.payload
         room.notes = restructureRoomNotes(room.notes)
         // Change URL
-        window.history.replaceState(null, document.title, `/?roomId=${message.payload.id}`);
+        writeRoomIdInURL(message.payload.id)
         dispatch({type: 'roomReceive', payload: room})
         break
       case "participant-added":
@@ -129,12 +129,23 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
   })
 }
 
+// URL
+
+const ROOMID_PARAM = `id`
+
+function writeRoomIdInURL(roomId: string) {
+  // Remove `==` at the end of the Room Id
+  const correctedRoomId = roomId.substring(0, roomId.length - 2)
+  window.history.replaceState(null, document.title, `/?${ROOMID_PARAM}=${correctedRoomId}`);
+}
+
 function readRoomIdFromURL(dispatch: Dispatch<types.Action>): void {
-  const roomId = (new URL(window.location.toString())).searchParams.get('roomId')
+  const roomId = (new URL(window.location.toString())).searchParams.get(ROOMID_PARAM)
   if (!roomId) {
     return
   }
-  dispatch({type: 'roomIdSetFromURL', payload: roomId})
+  // Add previously removed `==` at the end of the Room Id
+  dispatch({type: 'roomIdSetFromURL', payload: `${roomId}==`})
 }
 
 // State

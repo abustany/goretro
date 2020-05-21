@@ -32,7 +32,7 @@ Scenario('Test everything', async (I) => {
   identifyAs(I, user1name)
 
   const url = await I.grabCurrentUrl();
-  const roomId = new URL(url).searchParams.get('roomId');
+  const roomId = new URL(url).searchParams.get('id');
   expect(roomId).to.not.be.null;
 
   session(user2name, () => {
