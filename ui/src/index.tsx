@@ -3,12 +3,14 @@ import ReactDOM from 'react-dom';
 import * as serviceWorker from './serviceWorker';
 
 import { Connection, generateClientId, generateSecret } from './connection';
-import { getSetLocalStorage } from './utils'
+import { getSetLocalStorage, trimBase64Padding } from './utils'
 import './index.scss';
 import App from './App';
 
-const clientId = getSetLocalStorage("clientId", generateClientId)
-const secret = getSetLocalStorage("secret", generateSecret)
+// the ID/secret generation functions already generate unpadded values, but we
+// might still have some old padded values in the local storage.
+const clientId = trimBase64Padding(getSetLocalStorage("clientId", generateClientId))
+const secret = trimBase64Padding(getSetLocalStorage("secret", generateSecret))
 const connection = new Connection('/api', clientId, secret);
 
 ReactDOM.render(

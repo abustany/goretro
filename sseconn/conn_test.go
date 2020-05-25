@@ -64,7 +64,7 @@ func TestInvalidCommands(t *testing.T) {
 	baseURL := server.URL + "/api/"
 
 	clientID := makeClientID(t)
-	clientSecret, err := ClientSecretFromString("R0sxpQUrf7Yc2_uqbQi6E_YJUXUbKqXM-v7dm_m9qe-LuEAtR-ST9IUvwn31_dgSFMeJf51XVhZA-1XhytCnjg==")
+	clientSecret, err := ClientSecretFromString("R0sxpQUrf7Yc2_uqbQi6E_YJUXUbKqXM-v7dm_m9qe-LuEAtR-ST9IUvwn31_dgSFMeJf51XVhZA-1XhytCnjg")
 	if err != nil {
 		t.Fatalf("error parsing client secret: %s", err)
 	}
@@ -424,7 +424,7 @@ func postData(baseURL, clientID, clientSecret string, data interface{}) error {
 
 func TestClientID(t *testing.T) {
 	validClientID := ClientID{0x26, 0xf1, 0xe1, 0x49, 0x53, 0x52, 0xe5, 0xc9, 0x63, 0x16, 0xeb, 0x6d, 0xa7, 0xcf, 0xa0, 0xdc}
-	validClientIDString := "JvHhSVNS5cljFuttp8-g3A=="
+	validClientIDString := "JvHhSVNS5cljFuttp8-g3A"
 	for _, tc := range []struct {
 		Name     string
 		Input    string
@@ -436,7 +436,7 @@ func TestClientID(t *testing.T) {
 		},
 		{
 			Name:  "Invalid length",
-			Input: "UYm22c4yMsUJug==",
+			Input: "UYm22c4yMsUJug",
 		},
 		{
 			Name:     "Valid ID",
@@ -500,7 +500,7 @@ func TestClientID(t *testing.T) {
 func TestClientSecret(t *testing.T) {
 	zeroClientSecret := ClientSecret{}
 	validClientSecret := ClientSecret{0xae, 0x69, 0x29, 0x6c, 0x65, 0x7d, 0x73, 0xa9, 0x8c, 0xa3, 0x55, 0x17, 0x8a, 0x9e, 0xe3, 0x64, 0xb6, 0xb8, 0x84, 0x76, 0x18, 0xe7, 0x22, 0xe3, 0x72, 0x1e, 0x3f, 0x3e, 0xcd, 0xd6, 0x50, 0xf0, 0x0b, 0xef, 0x4d, 0x68, 0xed, 0xe2, 0xa3, 0x7a, 0xdb, 0x51, 0xea, 0x71, 0x3b, 0xfe, 0xa3, 0xcb, 0xcc, 0xd4, 0x9e, 0x98, 0xf3, 0xe7, 0x02, 0x5b, 0x19, 0xb3, 0xf0, 0x2a, 0x43, 0x9c, 0x7c, 0xe0}
-	validClientSecretString := "rmkpbGV9c6mMo1UXip7jZLa4hHYY5yLjch4_Ps3WUPAL701o7eKjettR6nE7_qPLzNSemPPnAlsZs_AqQ5x84A=="
+	validClientSecretString := "rmkpbGV9c6mMo1UXip7jZLa4hHYY5yLjch4_Ps3WUPAL701o7eKjettR6nE7_qPLzNSemPPnAlsZs_AqQ5x84A"
 
 	for _, tc := range []struct {
 		Name     string
@@ -513,7 +513,7 @@ func TestClientSecret(t *testing.T) {
 		},
 		{
 			Name:  "Invalid length",
-			Input: "UYm22c4yMsUJug==",
+			Input: "UYm22c4yMsUJug",
 		},
 		{
 			Name:     "Valid ID",

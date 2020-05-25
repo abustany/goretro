@@ -86,7 +86,8 @@ type clientConn struct {
 func ClientIDFromString(s string) (ClientID, error) {
 	var c ClientID
 
-	data, err := base64.URLEncoding.DecodeString(s)
+	s = strings.TrimRight(s, "=")
+	data, err := base64.RawURLEncoding.DecodeString(s)
 	if err != nil || len(data) != clientIDLength {
 		return c, errInvalidClientID
 	}
@@ -102,7 +103,7 @@ func NewClientID() (ClientID, error) {
 }
 
 func (c ClientID) String() string {
-	return base64.URLEncoding.EncodeToString(c[:])
+	return base64.RawURLEncoding.EncodeToString(c[:])
 }
 
 func (c ClientID) MarshalJSON() ([]byte, error) {
@@ -121,7 +122,8 @@ func (c ClientID) IsZero() bool {
 func ClientSecretFromString(s string) (ClientSecret, error) {
 	var c ClientSecret
 
-	data, err := base64.URLEncoding.DecodeString(s)
+	s = strings.TrimRight(s, "=")
+	data, err := base64.RawURLEncoding.DecodeString(s)
 	if err != nil || len(data) != clientSecretLength {
 		return c, errInvalidClientSecret
 	}
@@ -131,7 +133,7 @@ func ClientSecretFromString(s string) (ClientSecret, error) {
 }
 
 func (c ClientSecret) String() string {
-	return base64.URLEncoding.EncodeToString(c[:])
+	return base64.RawURLEncoding.EncodeToString(c[:])
 }
 
 type command struct {

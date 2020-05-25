@@ -1,4 +1,5 @@
 import { Mood, RoomState } from './types';
+import { trimBase64Padding } from './utils';
 
 const CLIENT_ID_LEN = 16;
 const SECRET_LEN = 64;
@@ -104,7 +105,7 @@ export class Connection {
 function randomID(length: number) {
   const data = new Uint8Array(length);
   window.crypto.getRandomValues(data);
-  return btoa(String.fromCharCode.apply(null, data as unknown as number[])).replace(/\+/g, '-').replace(/\//g, '_');
+  return trimBase64Padding(btoa(String.fromCharCode.apply(null, data as unknown as number[])).replace(/\+/g, '-').replace(/\//g, '_'));
 }
 
 export function generateClientId(): string {

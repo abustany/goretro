@@ -134,9 +134,7 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
 const ROOMID_PARAM = `id`
 
 function writeRoomIdInURL(roomId: string) {
-  // Remove `==` at the end of the Room Id
-  const correctedRoomId = roomId.substring(0, roomId.length - 2)
-  window.history.replaceState(null, document.title, `/?${ROOMID_PARAM}=${correctedRoomId}`);
+  window.history.replaceState(null, document.title, `/?${ROOMID_PARAM}=${roomId}`);
 }
 
 function readRoomIdFromURL(dispatch: Dispatch<types.Action>): void {
@@ -144,8 +142,7 @@ function readRoomIdFromURL(dispatch: Dispatch<types.Action>): void {
   if (!roomId) {
     return
   }
-  // Add previously removed `==` at the end of the Room Id
-  dispatch({type: 'roomIdSetFromURL', payload: `${roomId}==`})
+  dispatch({type: 'roomIdSetFromURL', payload: roomId})
 }
 
 // State
