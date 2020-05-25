@@ -358,6 +358,7 @@ func (h *Handler) eventsHandlerHTTP(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 	flusher := w.(http.Flusher)
 	keepAliveTicker := time.NewTicker(keepAliveInterval)
+	defer keepAliveTicker.Stop()
 
 	w.Header().Add("Cache-Control", "no-cache, no-transform")
 	w.Header().Add("Content-Type", eventStreamContentType)
