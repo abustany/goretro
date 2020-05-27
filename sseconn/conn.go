@@ -36,6 +36,7 @@ type clientConnState int
 const (
 	helloReceived clientConnState = iota + 1
 	eventsOpen
+	eventsPaused
 )
 
 var (
@@ -67,6 +68,7 @@ type Handler struct {
 	lock                sync.RWMutex
 	connections         map[ClientID]*clientConn
 	connectionListeners []chan ClientID
+	closeChan           chan struct{}
 }
 
 type ClientID [clientIDLength]byte
@@ -74,6 +76,7 @@ type ClientSecret [clientSecretLength]byte
 
 type clientConn struct {
 	state     clientConnState
+	pausedAt  time.Time
 	clientID  ClientID
 	secret    ClientSecret
 	eventChan chan interface{}
@@ -182,6 +185,10 @@ func NewHandler(prefix string) *Handler {
 	router.Methods("POST").Path("/command").HandlerFunc(h.commandHandlerHTTP)
 	router.Methods("GET").Path("/events/{id}").HandlerFunc(h.eventsHandlerHTTP)
 
+	h.closeChan = make(chan struct{})
+
+	go h.janitor()
+
 	return h
 }
 
@@ -193,6 +200,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 	h.router.ServeHTTP(w, r)
+}
+
+func (h *Handler) Close() {
+	close(h.closeChan)
 }
 
 func (h *Handler) ListenConnections() <-chan ClientID {
@@ -366,22 +377,22 @@ func (h *Handler) eventsHandlerHTTP(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, ": Beginning of the event stream\n\n")
 	flusher.Flush()
 
-MainLoop:
 	for {
 		var message interface{}
 		select {
 		case ev, ok := <-eventsChan:
 			if !ok {
-				break MainLoop
+				// the connection has been definitely closed by the Handler
+				return
 			}
 
 			message = ev
 		case <-keepAliveTicker.C:
 			message = eventData{Event: keepAliveEventName}
 		case <-r.Context().Done():
-			// connection has been closed
-			h.closeConnection(clientID)
-			break MainLoop
+			// the downstream connection to the client broke, pause the connection
+			h.markConnectionPaused(clientID)
+			return
 		}
 
 		io.WriteString(w, "data: ")
@@ -468,11 +479,62 @@ func (h *Handler) markConnectionOpen(clientID ClientID) (<-chan interface{}, err
 	c, exists := h.connections[clientID]
 	if !exists {
 		return nil, errUnknownClient
-	} else if c.state != helloReceived {
+	} else if c.state != helloReceived && c.state != eventsPaused {
 		return nil, errInvalidConnState
 	}
 
 	c.state = eventsOpen
+	c.pausedAt = time.Time{}
 
 	return c.eventChan, nil
+}
+
+func (h *Handler) markConnectionPaused(clientID ClientID) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	c, exists := h.connections[clientID]
+	if !exists {
+		log.Printf("trying to pause non existing connection")
+		return
+	} else if c.state != eventsOpen {
+		log.Printf("trying to pause a connection that was not open")
+		return
+	}
+
+	c.state = eventsPaused
+	c.pausedAt = time.Now()
+}
+
+func (h *Handler) janitor() {
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-h.closeChan:
+			return
+		case <-ticker.C:
+			h.closeExpiredConnections()
+		}
+	}
+}
+
+func (h *Handler) closeExpiredConnections() {
+	const pausedConnectionTTL = 3 * time.Minute
+
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	now := time.Now()
+
+	for clientID, conn := range h.connections {
+		if conn.state != eventsPaused || now.Sub(conn.pausedAt) < pausedConnectionTTL {
+			continue
+		}
+
+		if err := h.closeConnectionLocked(clientID); err != nil {
+			log.Printf("error closing connection %s: %s", clientID, err)
+		}
+	}
 }

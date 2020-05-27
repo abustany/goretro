@@ -14,6 +14,11 @@ import (
 	"time"
 )
 
+func init() {
+	// else tests take forever
+	keepAliveInterval = 200 * time.Millisecond
+}
+
 func makeClientID(t *testing.T) ClientID {
 	clientID, err := NewClientID()
 	if err != nil {
@@ -23,14 +28,29 @@ func makeClientID(t *testing.T) ClientID {
 	return clientID
 }
 
+func makeClientSecret(t *testing.T) ClientSecret {
+	clientSecret, err := ClientSecretFromString("R0sxpQUrf7Yc2_uqbQi6E_YJUXUbKqXM-v7dm_m9qe-LuEAtR-ST9IUvwn31_dgSFMeJf51XVhZA-1XhytCnjg==")
+	if err != nil {
+		t.Fatalf("error parsing client secret: %s", err)
+	}
+
+	return clientSecret
+}
+
 func TestSendOnUnknownClient(t *testing.T) {
-	if err := NewHandler("api").Send(makeClientID(t), "client does not exist", 33); !errors.Is(err, errUnknownClient) {
+	handler := NewHandler("api")
+	defer handler.Close()
+
+	if err := handler.Send(makeClientID(t), "client does not exist", 33); !errors.Is(err, errUnknownClient) {
 		t.Errorf("sending a message to an unknown client should return errUnknownClient")
 	}
 }
 
 func TestListenOnUnknownClient(t *testing.T) {
-	if _, err := NewHandler("api").Listen(makeClientID(t)); !errors.Is(err, errUnknownClient) {
+	handler := NewHandler("api")
+	defer handler.Close()
+
+	if _, err := handler.Listen(makeClientID(t)); !errors.Is(err, errUnknownClient) {
 		t.Errorf("listening on an unknown client should return errUnknownClient")
 	}
 }
@@ -39,6 +59,7 @@ func TestInvalidCommands(t *testing.T) {
 	handler := NewHandler("api")
 	server := httptest.NewServer(handler)
 	defer server.Close()
+	defer handler.Close()
 
 	baseURL := server.URL + "/api/"
 
@@ -160,25 +181,79 @@ func TestInvalidCommands(t *testing.T) {
 	})
 }
 
-func TestHelloKeepaliveGoodbye(t *testing.T) {
-	keepAliveInterval = 200 * time.Millisecond
-
+func TestReconnectEventSource(t *testing.T) {
 	handler := NewHandler("api")
 	server := httptest.NewServer(handler)
 	defer server.Close()
-
-	incomingConnections := handler.ListenConnections()
+	defer handler.Close()
 
 	baseURL := server.URL + "/api/"
-	clientID, err := ClientIDFromString("VHUFS_CXZf1rn4IFPRY7fA==")
+	clientID, clientSecret := makeClientID(t), makeClientSecret(t)
+
+	_, err := postHello(baseURL, clientID.String(), clientSecret.String())
 	if err != nil {
-		t.Fatalf("error parsing client ID: %s", err)
+		t.Fatalf(err.Error())
 	}
 
-	clientSecret, err := ClientSecretFromString("R0sxpQUrf7Yc2_uqbQi6E_YJUXUbKqXM-v7dm_m9qe-LuEAtR-ST9IUvwn31_dgSFMeJf51XVhZA-1XhytCnjg==")
-	if err != nil {
-		t.Fatalf("error parsing client secret: %s", err)
+	for i := 0; i < 2; i++ {
+		// Dispatch an event while the connection is closed. The event should not be lost.
+		if err := handler.Send(clientID, "event-name", "payload"); err != nil {
+			t.Fatalf(err.Error())
+		}
+
+		events, err := getEvents(baseURL, clientID.String())
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+
+		checkConnectionState(t, handler, clientID, eventsOpen)
+		eventReader := bufio.NewReader(events)
+		expectEvent(t, eventReader, `: Beginning of the event stream`)
+		expectEvent(t, eventReader, `data: {"event":"event-name","payload":"payload"}`)
+		expectEvent(t, eventReader, `data: {"event":"keep-alive"}`)
+
+		// Close the client channel. This should only pause the connection.
+		events.Close()
+		checkConnectionState(t, handler, clientID, eventsPaused)
 	}
+}
+
+func checkConnectionState(t *testing.T, h *Handler, clientID ClientID, expectedState clientConnState) {
+	t.Helper()
+
+	var state clientConnState
+
+	for i := 0; i < 50; i++ {
+		h.lock.RLock()
+		conn, ok := h.connections[clientID]
+		h.lock.RUnlock()
+
+		if !ok {
+			t.Errorf("connection does not exist: %s", clientID)
+			return
+		}
+
+		state = conn.state
+
+		if expectedState == state {
+			return
+		}
+
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	t.Errorf("unexpected connection state: expected %d, got %d", expectedState, state)
+}
+
+func TestHelloKeepaliveGoodbye(t *testing.T) {
+	handler := NewHandler("api")
+	server := httptest.NewServer(handler)
+	defer server.Close()
+	defer handler.Close()
+
+	incomingConnections := handler.ListenConnections()
+	baseURL := server.URL + "/api/"
+	clientID, clientSecret := makeClientID(t), makeClientSecret(t)
 
 	go func(t *testing.T) {
 		select {
@@ -210,24 +285,16 @@ func TestHelloKeepaliveGoodbye(t *testing.T) {
 
 	defer events.Close()
 
-	expectEvent := func(t *testing.T, expected string) {
-		t.Helper()
-
-		ev := receiveEvent(t, events)
-		if expectedEvent := expected + "\n"; ev != expectedEvent {
-			t.Fatalf("expected %q, got %q", expectedEvent, ev)
-		}
-	}
-
-	expectEvent(t, `: Beginning of the event stream`)
-	expectEvent(t, `data: {"event":"keep-alive"}`)
+	eventReader := bufio.NewReader(events)
+	expectEvent(t, eventReader, `: Beginning of the event stream`)
+	expectEvent(t, eventReader, `data: {"event":"keep-alive"}`)
 
 	testEventPayload := struct{ Test int }{Test: 42}
 	if err := handler.Send(clientID, "test", testEventPayload); err != nil {
 		t.Fatalf("error sending event: %s", err)
 	}
 
-	expectEvent(t, `data: {"event":"test","payload":{"Test":42}}`)
+	expectEvent(t, eventReader, `data: {"event":"test","payload":{"Test":42}}`)
 
 	// 3. Receive message
 	resultChan := make(chan interface{}, 1)
@@ -303,9 +370,9 @@ func getEvents(baseURL, clientID string) (io.ReadCloser, error) {
 	return res.Body, nil
 }
 
-func receiveEvent(t *testing.T, r io.Reader) string {
+func receiveEvent(t *testing.T, r *bufio.Reader) string {
 	for {
-		line, err := bufio.NewReader(r).ReadString('\n')
+		line, err := r.ReadString('\n')
 		if err != nil {
 			t.Fatalf("error reading event: %s", err)
 		}
@@ -315,6 +382,15 @@ func receiveEvent(t *testing.T, r io.Reader) string {
 		}
 
 		return line
+	}
+}
+
+func expectEvent(t *testing.T, r *bufio.Reader, expected string) {
+	t.Helper()
+
+	ev := receiveEvent(t, r)
+	if expectedEvent := expected + "\n"; ev != expectedEvent {
+		t.Errorf("expected %q, got %q", expectedEvent, ev)
 	}
 }
 

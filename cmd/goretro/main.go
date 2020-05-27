@@ -20,6 +20,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	apiHandler := sseconn.NewHandler(apiPrefix)
+	defer apiHandler.Close()
 	mux.Handle(apiPrefix, apiHandler)
 
 	// Starts the listening on new connections
