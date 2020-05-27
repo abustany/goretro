@@ -23,8 +23,9 @@ const (
 )
 
 type Participant struct {
-	ClientID sseconn.ClientID `json:"clientId"`
-	Name     string           `json:"name"`
+	ClientID        sseconn.ClientID `json:"clientId"`
+	Name            string           `json:"name"`
+	FinishedWriting bool             `json:"finishedWriting,omitempty"`
 }
 
 type Note struct {
@@ -274,18 +275,50 @@ func (r *Retro) SaveNote(clientID sseconn.ClientID, ID uint, text string, mood M
 	return nil
 }
 
+func (r *Retro) SetFinishedWriting(clientID sseconn.ClientID, finished bool) []Event {
+	r.Lock()
+	defer r.Unlock()
+
+	if r.state != Running || clientID == r.hostID {
+		return nil
+	}
+
+	var (
+		events []Event
+	)
+
+	for i, p := range r.participants {
+		if p.ClientID != clientID {
+			continue
+		}
+
+		r.participants[i].FinishedWriting = finished
+
+		events = append(events, Event{
+			Recipient: r.hostID,
+			Name:      participantUpdatedEventName,
+			Payload:   r.participants[i],
+		})
+
+		break
+	}
+
+	return events
+}
+
 func (r *Retro) serializeForClientLocked(clientID sseconn.ClientID) SerializedRetro {
+	includeFinishedWriting := clientID == r.hostID
 	clientNotes := r.notes[clientID]
 
 	if len(clientNotes) == 0 {
-		return r.serializeLockedHelper(map[sseconn.ClientID][]Note{})
+		return r.serializeLockedHelper(map[sseconn.ClientID][]Note{}, includeFinishedWriting)
 	}
 
 	notes := map[sseconn.ClientID][]Note{
 		clientID: append([]Note{}, clientNotes...),
 	}
 
-	return r.serializeLockedHelper(notes)
+	return r.serializeLockedHelper(notes, includeFinishedWriting)
 }
 
 func (r *Retro) serializeLocked() SerializedRetro {
@@ -295,16 +328,24 @@ func (r *Retro) serializeLocked() SerializedRetro {
 		notes[clientID] = append([]Note{}, clientNotes...)
 	}
 
-	return r.serializeLockedHelper(notes)
+	return r.serializeLockedHelper(notes, false)
 }
 
-func (r *Retro) serializeLockedHelper(notes map[sseconn.ClientID][]Note) SerializedRetro {
+func (r *Retro) serializeLockedHelper(notes map[sseconn.ClientID][]Note, includeFinishedWriting bool) SerializedRetro {
+	participants := append([]Participant{}, r.participants...)
+
+	if !includeFinishedWriting {
+		for i := range participants {
+			participants[i].FinishedWriting = false
+		}
+	}
+
 	return SerializedRetro{
 		ID:           r.id,
 		Name:         r.name,
 		State:        r.state,
 		HostID:       r.hostID,
-		Participants: append([]Participant{}, r.participants...),
+		Participants: participants,
 		Notes:        notes,
 	}
 }

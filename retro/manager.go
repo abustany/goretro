@@ -121,6 +121,13 @@ type saveNoteCommand struct {
 	Mood uint   `json:"mood"`
 }
 
+const setFinishedWritingName = `set-finished-writing`
+
+type setFinishedWritingCommand struct {
+	command
+	Finished bool `json:"finished"`
+}
+
 func (m *Manager) handleConnectionData(clientID sseconn.ClientID, data json.RawMessage) {
 	if err := m.handleCommand(clientID, data); err != nil {
 		log.Printf("invalid command from client %s: %s (%s)", clientID.String(), string(data), err)
@@ -174,6 +181,13 @@ func (m *Manager) handleCommand(clientID sseconn.ClientID, data json.RawMessage)
 		}
 
 		events, err = m.handleSaveNoteCommand(clientID, saveNoteCommand)
+	case setFinishedWritingName:
+		var setFinishedWritingCommand setFinishedWritingCommand
+		if err := json.Unmarshal(data, &setFinishedWritingCommand); err != nil {
+			return fmt.Errorf("error decoding command: %w", err)
+		}
+
+		events, err = m.handleSetFinishedWritingCommand(clientID, setFinishedWritingCommand)
 	default:
 		return fmt.Errorf("unknown command %s", cmd.Name)
 	}
@@ -286,6 +300,18 @@ func (m *Manager) handleSaveNoteCommand(clientID sseconn.ClientID, cmd saveNoteC
 	}
 
 	return clientInfo.retro.SaveNote(clientID, cmd.ID, cmd.Text, mood), nil
+}
+
+func (m *Manager) handleSetFinishedWritingCommand(clientID sseconn.ClientID, cmd setFinishedWritingCommand) ([]Event, error) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	clientInfo := m.clientInfo[clientID]
+	if clientInfo.retro == nil {
+		return nil, errors.New("client is not in any room")
+	}
+
+	return clientInfo.retro.SetFinishedWriting(clientID, cmd.Finished), nil
 }
 
 func (m *Manager) dispatchEvents(events []Event) {

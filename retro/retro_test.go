@@ -333,3 +333,83 @@ func TestSaveNote(t *testing.T) {
 		checkEqual(t, map[sseconn.ClientID][]Note{p1.ClientID: expectedNotes}, r.notes)
 	})
 }
+
+func TestSetFinishedWriting(t *testing.T) {
+	r := makeRetro(t)
+	host := makePartipant(t, 0)
+	other := makePartipant(t, 1)
+	newJoiner := makePartipant(t, 2)
+	r.AddParticipant(host)
+	r.AddParticipant(other)
+	r.SetState(host.ClientID, Running)
+
+	t.Run("host setting finished flag does not trigger any events", func(t *testing.T) {
+		checkEqual(t, []Event(nil), r.SetFinishedWriting(host.ClientID, true))
+	})
+
+	t.Run("participant setting finished flag triggers an event to the host", func(t *testing.T) {
+		updatedOther := other
+		updatedOther.FinishedWriting = true
+
+		checkEqual(
+			t,
+			[]Event{
+				{
+					Recipient: host.ClientID,
+					Name:      participantUpdatedEventName,
+					Payload:   updatedOther,
+				},
+			},
+			r.SetFinishedWriting(other.ClientID, true),
+		)
+	})
+
+	t.Run("a participant rejoining does not see the FinishedWriting flag", func(t *testing.T) {
+		serializedRetro := SerializedRetro{
+			ID:     r.id,
+			Name:   r.name,
+			State:  Running,
+			HostID: host.ClientID,
+			Participants: []Participant{
+				host,
+				other,
+				newJoiner,
+			},
+			Notes: map[sseconn.ClientID][]Note{},
+		}
+
+		checkEqual(
+			t,
+			[]Event{
+				{Recipient: host.ClientID, Name: participantAddedEventName, Payload: newJoiner},
+				{Recipient: other.ClientID, Name: participantAddedEventName, Payload: newJoiner},
+				{Recipient: newJoiner.ClientID, Name: currentStateEventName, Payload: serializedRetro},
+			},
+			r.AddParticipant(newJoiner),
+		)
+	})
+
+	t.Run("the host rejoining sees the FinishedWriting flags", func(t *testing.T) {
+		serializedRetro := SerializedRetro{
+			ID:     r.id,
+			Name:   r.name,
+			State:  Running,
+			HostID: host.ClientID,
+			Participants: []Participant{
+				host,
+				other,
+				newJoiner,
+			},
+			Notes: map[sseconn.ClientID][]Note{},
+		}
+		serializedRetro.Participants[1].FinishedWriting = true
+
+		checkEqual(
+			t,
+			[]Event{
+				{Recipient: host.ClientID, Name: currentStateEventName, Payload: serializedRetro},
+			},
+			r.AddParticipant(host),
+		)
+	})
+}
