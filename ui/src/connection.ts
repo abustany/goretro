@@ -4,8 +4,8 @@ import { trimBase64Padding } from './utils';
 const CLIENT_ID_LEN = 16;
 const SECRET_LEN = 64;
 
-const MONITORING_PACE_MS = 2000;
-const KEEPALIVE_EXPECTED_PACE_MS = 12000
+const MONITORING_INTERVAL_MS = 2000;
+const KEEPALIVE_EXPECTED_INTERVAL_MS = 12000
 const DROPPED_SESSION_BODY = "Unknown client\n"
 
 type ConnectionStateChangeCallback = (connected: boolean) => void;
@@ -38,47 +38,60 @@ export class Connection {
 
     // Create an un-resolved Promise and keep a ref of the solver.
     let solver: (value?: unknown) => void
-    this.firstConnectionPromise = new Promise((resolve, _) => {
-      solver = resolve
-    })
+    this.firstConnectionPromise = new Promise((resolve, _) => { solver = resolve })
+    solver = solver!
 
     const res = await this.hello()
+    this.connectEventSource(res.eventsUrl, solver);
+  }
 
-    const eventSource = new EventSource(res.eventsUrl);
-    eventSource.onerror = (err) => {
-      console.error('Event source error', err);
-    }
+  connectEventSource(url: string, onConnected: ((value?: unknown) => void)) {
+    const eventSource = new EventSource(url);
 
     eventSource.onopen = () => {
-      solver()
+      onConnected()
       this.connected = true;
+
+      // Monitor connection
       this.lastKeepAlive = Date.now()
       this.startMonitoringConnection()
+
+      // Notify listeners
       this.connectionStateChangeListeners.forEach(x => x(true));
+    }
+
+    // Triggered:
+    // - When the EventSource cannot _establish_ connection.
+    // - Not sure when else.
+    eventSource.onerror = (err) => {
+      console.error('Event source error', err);
     }
 
     eventSource.onmessage = (evt) => {
       const parsed = JSON.parse(evt.data);
 
+      // Update keep-alive
       if (parsed.event === 'keep-alive') {
         this.lastKeepAlive = Date.now()
         return
       }
 
+      // Notify listeners
       this.messageListeners.forEach(x => x(parsed));
     }
   }
 
+  // Notify listeners about the EventSource connection status
   monitorConnection = () => {
     const timeElapsed = (Date.now() - this.lastKeepAlive!)
-    const stillConnected = (timeElapsed < KEEPALIVE_EXPECTED_PACE_MS)
+    const stillConnected = (timeElapsed < KEEPALIVE_EXPECTED_INTERVAL_MS)
     if (this.connected !== stillConnected) {
       this.connected = stillConnected
       this.connectionStateChangeListeners.forEach(x => x(stillConnected));
     }
-    setTimeout(this.monitorConnection, MONITORING_PACE_MS)
+    setTimeout(this.monitorConnection, MONITORING_INTERVAL_MS)
   }
-  startMonitoringConnection = () => setTimeout(this.monitorConnection, MONITORING_PACE_MS)
+  startMonitoringConnection = () => setTimeout(this.monitorConnection, MONITORING_INTERVAL_MS)
 
   onConnectionStateChange(callback: (connected: boolean) => void) {
     this.connectionStateChangeListeners.push(callback);
@@ -128,12 +141,6 @@ export class Connection {
   }
 }
 
-function randomID(length: number) {
-  const data = new Uint8Array(length);
-  window.crypto.getRandomValues(data);
-  return trimBase64Padding(btoa(String.fromCharCode.apply(null, data as unknown as number[])).replace(/\+/g, '-').replace(/\//g, '_'));
-}
-
 export function generateClientId(): string {
   return randomID(CLIENT_ID_LEN)
 }
@@ -151,6 +158,7 @@ async function rawCommand<T>(baseUrl: string, command: unknown, attempt?: number
     return rawCommand<T>(baseUrl, command, attempt! + 1)
   }
 
+  // Retry networking errors
   let res;
   try {
     res = await fetch(`${baseUrl}/command`, {
@@ -162,12 +170,10 @@ async function rawCommand<T>(baseUrl: string, command: unknown, attempt?: number
       body: JSON.stringify(command),
     })
   } catch(e) {
-    // console.error('API command error: ', e);
-    // console.log(e)
-    // throw e;
     return await retry()
   }
 
+  // Manage dropped session & Server errors
   if (res.status !== 200) {
     const body = await res.text()
 
@@ -188,4 +194,10 @@ const sleep = (ms: number) => {
 }
 interface HelloResponse {
   eventsUrl: string;
+}
+
+function randomID(length: number) {
+  const data = new Uint8Array(length);
+  window.crypto.getRandomValues(data);
+  return trimBase64Padding(btoa(String.fromCharCode.apply(null, data as unknown as number[])).replace(/\+/g, '-').replace(/\//g, '_'));
 }
