@@ -254,6 +254,7 @@ func (h *Handler) handleDataCommand(clientID ClientID, clientSecret ClientSecret
 }
 
 func (h *Handler) eventsHandlerHTTP(w http.ResponseWriter, r *http.Request) {
+	println(" ..... !!!! ")
 	vars := mux.Vars(r)
 	clientID, err := ClientIDFromString(vars["id"])
 	if err != nil {
@@ -422,7 +423,7 @@ func (h *Handler) janitor() {
 }
 
 func (h *Handler) closeExpiredConnections() {
-	const pausedConnectionTTL = 3 * time.Minute
+	const pausedConnectionTTL = 1 * time.Second
 
 	h.lock.Lock()
 	defer h.lock.Unlock()
