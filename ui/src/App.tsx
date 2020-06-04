@@ -112,6 +112,9 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
       case "participant-added":
         dispatch({type: 'roomParticipantAdd', payload: message.payload})
         break
+      case "participant-removed":
+        dispatch({type: 'roomParticipantRemoved', payload: message.payload})
+        break
       case "host-changed":
         dispatch({type: 'hostChange', payload: message.payload})
         break
@@ -194,6 +197,14 @@ function reducer(state: types.State, action: types.Action): types.State {
             ...state.room!.participants,
             action.payload,
           ]
+        }
+      }
+    case 'roomParticipantRemoved':
+      return {
+        ...state,
+        room: {
+          ...state.room!,
+          participants: state.room!.participants.filter((p) => p.clientId !== action.payload.clientId),
         }
       }
     case 'roomStateChanged':
