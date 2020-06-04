@@ -60,6 +60,9 @@ export type Action = {
   type: 'roomParticipantAdd';
   payload: Participant;
 } | {
+  type: 'roomParticipantRemoved';
+  payload: Participant;
+} | {
   type: 'hostChange';
   payload: string; // host clientId
 } | {
