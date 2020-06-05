@@ -62,7 +62,8 @@ export class Connection {
 
     // Triggered:
     // - When the EventSource cannot _establish_ connection.
-    // - Not sure when else.
+    // - When I put my laptop to sleep.
+    // - When I close the Go server (but not with the development proxy server).
     eventSource.onerror = (err) => {
       console.error('Event source error', err);
     }
@@ -83,9 +84,11 @@ export class Connection {
 
   // Notify listeners about the EventSource connection status
   monitorConnection = () => {
+    console.log("monitoring")
     const timeElapsed = (Date.now() - this.lastKeepAlive!)
     const stillConnected = (timeElapsed < KEEPALIVE_EXPECTED_INTERVAL_MS)
     if (this.connected !== stillConnected) {
+
       this.connected = stillConnected
       this.connectionStateChangeListeners.forEach(x => x(stillConnected));
     }
