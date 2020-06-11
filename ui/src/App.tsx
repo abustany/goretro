@@ -73,7 +73,7 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
 
 const disconnectedComponent = () => <div className="App_warning">
   <div>Reconnecting...</div>
-  <div className="indication">The connection has been lost, you may not be uptodate.</div>
+  <div className="indication">The connection has been lost, you may not be up to date.</div>
 </div>
 
 function handleNameSet(connection: Connection, dispatch: Dispatch<types.Action>, name: string): void {

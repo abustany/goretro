@@ -86,11 +86,17 @@ export class Connection {
   monitorConnection = () => {
     console.log("monitoring")
     const timeElapsed = (Date.now() - this.lastKeepAlive!)
-    const stillConnected = (timeElapsed < KEEPALIVE_EXPECTED_INTERVAL_MS)
-    if (this.connected !== stillConnected) {
+    const nowConnected = (timeElapsed < KEEPALIVE_EXPECTED_INTERVAL_MS)
+    if (this.connected !== nowConnected) {
+      this.hello().then((response) => {
+        const eventSource = new EventSource(response.eventsUrl)
+      })
 
-      this.connected = stillConnected
-      this.connectionStateChangeListeners.forEach(x => x(stillConnected));
+      this.connected = nowConnected
+      if (this.connected) {
+        this.hello()
+      }
+      this.connectionStateChangeListeners.forEach(x => x(nowConnected));
     }
     setTimeout(this.monitorConnection, MONITORING_INTERVAL_MS)
   }
