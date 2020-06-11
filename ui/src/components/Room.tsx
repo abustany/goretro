@@ -58,10 +58,10 @@ export default function({room, userId, link, onNoteSave, onStateTransition}: Pro
         { isReviewing && <button onClick={() => handleExport(room.notes, nameById)}>Export</button> }
         <Participants participants={nameById} hostId={room.hostId} userId={userId}/>
       </div>
-    </div>
 
-    <div className="Room__host">
-      { isHost && <StatusHost state={room.state} onStateTransition={onStateTransition}/> }
+      <div className="Room__info-footer">
+        { isHost && <StatusHost state={room.state} onStateTransition={onStateTransition}/> }
+      </div>
     </div>
   </div>
 }
