@@ -1,9 +1,6 @@
 package sseconn
 
 import (
-	"bytes"
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,14 +28,6 @@ var (
 	keepAliveInterval = 10 * time.Second
 )
 
-type clientConnState int
-
-const (
-	helloReceived clientConnState = iota + 1
-	eventsOpen
-	eventsPaused
-)
-
 var (
 	errInvalidRequest      = errors.New("Invalid request")
 	errInvalidClientID     = errors.New("Invalid client ID")
@@ -59,8 +48,8 @@ var (
 // 2. GET /api/events/{ID} for server sent events
 //
 // Connection steps:
-// 1. Client sends initial POST to open connection with a client ID (how do we prevent takeovers?)
-// 2. Server sends back SSE endpoint URL
+// 1. Client sends initial POST to open connection with a client ID (how do we prevent takeovers?).
+// 2. Server sends back SSE endpoint URL.
 // 3. Client creates EventSource and when the connection is open, confirms to the server.
 type Handler struct {
 	prefix              string
@@ -69,98 +58,6 @@ type Handler struct {
 	connections         map[ClientID]*clientConn
 	connectionListeners []chan ClientID
 	closeChan           chan struct{}
-}
-
-type ClientID [clientIDLength]byte
-type ClientSecret [clientSecretLength]byte
-
-type clientConn struct {
-	state     clientConnState
-	pausedAt  time.Time
-	clientID  ClientID
-	secret    ClientSecret
-	eventChan chan interface{}
-	listeners []chan json.RawMessage
-}
-
-func ClientIDFromString(s string) (ClientID, error) {
-	var c ClientID
-
-	s = strings.TrimRight(s, "=")
-	data, err := base64.RawURLEncoding.DecodeString(s)
-	if err != nil || len(data) != clientIDLength {
-		return c, errInvalidClientID
-	}
-
-	copy(c[:], data)
-	return c, nil
-}
-
-func NewClientID() (ClientID, error) {
-	var res ClientID
-	_, err := rand.Read(res[:])
-	return res, err
-}
-
-func (c ClientID) String() string {
-	return base64.RawURLEncoding.EncodeToString(c[:])
-}
-
-func (c ClientID) MarshalJSON() ([]byte, error) {
-	return json.Marshal(c.String())
-}
-
-func (c ClientID) MarshalText() ([]byte, error) {
-	return []byte(c.String()), nil
-}
-
-func (c ClientID) IsZero() bool {
-	var zero ClientID
-	return bytes.Equal(zero[:], c[:])
-}
-
-func ClientSecretFromString(s string) (ClientSecret, error) {
-	var c ClientSecret
-
-	s = strings.TrimRight(s, "=")
-	data, err := base64.RawURLEncoding.DecodeString(s)
-	if err != nil || len(data) != clientSecretLength {
-		return c, errInvalidClientSecret
-	}
-
-	copy(c[:], data)
-	return c, nil
-}
-
-func (c ClientSecret) String() string {
-	return base64.RawURLEncoding.EncodeToString(c[:])
-}
-
-type command struct {
-	Name     string `json:"name"`
-	ClientID string `json:"clientId"`
-	Secret   string `json:"secret"`
-}
-
-const helloCommandName = "hello"
-
-type helloResult struct {
-	EventsURL string `json:"eventsUrl"`
-}
-
-const dataCommandName = "data"
-
-type dataCommand struct {
-	command
-	Payload json.RawMessage `json:"payload"`
-}
-
-type dataResult struct {
-}
-
-type eventData struct {
-	Event   string      `json:"event"`
-	Payload interface{} `json:"payload,omitempty"`
 }
 
 func NewHandler(prefix string) *Handler {
@@ -249,6 +146,8 @@ func (h *Handler) Listen(clientID ClientID) (<-chan json.RawMessage, error) {
 
 	return ch, nil
 }
+
+// Handler - Private
 
 func (h *Handler) writeError(w http.ResponseWriter, err error) {
 	switch {
