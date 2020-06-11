@@ -7,7 +7,7 @@
   justify-content: center;
   align-items: center;
 
-  padding: 0.5rem;
+  padding: 1rem 0.5rem;
 
   background-color: $darkLighterColor;
   border-radius: $radiusBigger;
@@ -21,6 +21,8 @@
   &:active {
     background-color: $darkLighterColor;
   }
+
+  position: relative;
 }
 
 .Link > * {
@@ -29,10 +31,22 @@
 
 .Link__text {
   font-family: monospace;
+  position: relative;
 }
 
 .Link__icon {
   // font-size: 2rem;
-  // -webkit-filter: grayscale(100%);
-  // filter: grayscale(100%);
+  width: 4rem;
+}
+
+.Link__confirmation {
+  font-size: 75%;
+  padding-top: 0;
+  line-height: 1;
+  // position: absolute;
+  // font-family: monospace;
+  // bottom: 0.25rem;
+}
+.-clicked {
+  color: $redAltColor !important;
 }
