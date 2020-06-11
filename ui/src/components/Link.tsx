@@ -9,8 +9,8 @@ export default function({link}: Props) {
   return <div>
     <h2>Invite participants!</h2>
     <div className="Link" onClick={() => {navigator.clipboard.writeText(link)}}>
+      <i className="fas fa-clipboard Link__icon"></i>
       <span className="Link__text">{link}</span>
-      <span className="Link__icon" role="img" aria-labelledby="Copy to clipboard">📋</span>
     </div>
   </div>
 }
