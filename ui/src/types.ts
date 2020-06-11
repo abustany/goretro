@@ -1,6 +1,7 @@
 export interface Participant {
   clientId: string;
   name: string;
+  finishedWriting?: boolean;
 };
 
 export enum RoomState {

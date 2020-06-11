@@ -64,6 +64,7 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
     link={window.location.toString()}
     onNoteSave={(mood, text, id) => { handleNoteSave(connection, state, dispatch, mood, text, id) }}
     onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
+    onHasFinishedWriting={(hasFinished) => { handleFinishedWriting(connection, hasFinished)} }
   />
 }
 
@@ -92,6 +93,10 @@ function handleNoteSave(connection: Connection, state: types.State, dispatch: Di
     dispatch({type: 'noteCreated', payload: note})
     connection.saveNote(note.id, note.text, note.mood)
   }
+}
+
+function handleFinishedWriting(connection: Connection, hasFinished: boolean) {
+  connection.setFinishedWriting(hasFinished)
 }
 
 // Connect the EventSource to the State via Actions.

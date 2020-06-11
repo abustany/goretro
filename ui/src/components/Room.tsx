@@ -22,10 +22,14 @@ interface Props {
   link: string;
   onNoteSave: (mood: t.Mood, text: string, id?: number) => void;
   onStateTransition: () => void;
+  onHasFinishedWriting: (ready: boolean) => void;
 }
 
-export default function({room, userId, link, onNoteSave, onStateTransition}: Props) {
+export default function({room, userId, link, onNoteSave, onStateTransition, onHasFinishedWriting}: Props) {
+  // Refactor nameById and participantById into a same ExtendedParticipant.
   const nameById = idToName(room.participants)
+  const participantById = idToParticipant(room.participants)
+
   const notesByMood = moodToNotes(room.notes)
   const isHost = userId === room.hostId
   const isWaiting = room.state === t.RoomState.WAITING_FOR_PARTICIPANTS
@@ -50,13 +54,13 @@ export default function({room, userId, link, onNoteSave, onStateTransition}: Pro
 
     <div className="Room__info">
       <div className="Room__info-centered">
-        <StatusParticipant state={room.state}/>
+        <StatusParticipant state={room.state} onHasFinishedWriting={isHost ? undefined : onHasFinishedWriting}/>
         { isWaiting && <Link link={link}/> }
       </div>
 
       <div className="Room__info-bottom">
         { isReviewing && <button onClick={() => handleExport(room.notes, nameById)}>Export</button> }
-        <Participants participants={nameById} hostId={room.hostId} userId={userId}/>
+        <Participants participants={participantById} participantNames={nameById} hostId={room.hostId} userId={userId}/>
       </div>
 
       <div className="Room__info-footer">
@@ -102,6 +106,12 @@ function idToName(participants: t.Participant[]): Map<string, string> {
     }
   })
 
+  return res
+}
+
+function idToParticipant(participants: t.Participant[]): Map<string, t.Participant> {
+  const res = new Map()
+  participants.forEach(p => res.set(p.clientId, p))
   return res
 }
 

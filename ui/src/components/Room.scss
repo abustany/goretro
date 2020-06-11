@@ -25,7 +25,6 @@ $_Room__v-margin: 1.5rem;
   padding: 0 0.5rem;
 }
 
-
 .Room__info {
   flex-grow: 1;
 
@@ -37,8 +36,8 @@ $_Room__v-margin: 1.5rem;
     color: $redAltColor;
   }
 
-  h2 ~ * {
-    margin: 0.25rem;
+  .-vs {
+   margin: 0.5rem 0;
   }
 
   // Inner

@@ -27,3 +27,7 @@ button, input[type=submit] {
 html {
   font-family: $font;
 }
+
+button:disabled {
+  background-color: $disabledColor;
+}
