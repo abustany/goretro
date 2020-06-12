@@ -7,7 +7,7 @@
   justify-content: center;
   align-items: center;
 
-  padding: 1rem 0.5rem;
+  padding: 0.5rem;
 
   background-color: $darkLighterColor;
   border-radius: $radiusBigger;
@@ -34,19 +34,18 @@
   position: relative;
 }
 
-.Link__icon {
-  // font-size: 2rem;
-  width: 4rem;
-}
+.Link__clipboard {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 
-.Link__confirmation {
-  font-size: 75%;
-  padding-top: 0;
-  line-height: 1;
-  // position: absolute;
-  // font-family: monospace;
-  // bottom: 0.25rem;
-}
-.Link__confirmation--clicked {
-  color: $redAltColor !important;
+  height: 4rem;
+
+  img {
+    height: 100%;
+    width: auto;
+  }
+
+  font-family: $fontTitle;
 }

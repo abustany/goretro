@@ -10,7 +10,7 @@ export default function({link}: Props) {
   const [clicked, setClicked] = useState(false)
   useEffect(() => {
     if (clicked) {
-      const id = setTimeout(() => { setClicked(false) }, 1000)
+      const id = setTimeout(() => { setClicked(false) }, 1500)
       return () => clearTimeout(id)
     }
   }, [clicked])
@@ -23,8 +23,11 @@ export default function({link}: Props) {
   return <div>
     <h2>Invite participants!</h2>
     <div className="Link" onClick={handleCopy}>
-      <img className="Link__icon" src={ClipboardImg}></img>
-      <span className={`Link__confirmation ${clicked ? 'Link__confirmation--clicked' : ''}`}>{ clicked ? 'Copied ✓' : 'Copy' }</span>
+      <div className="Link__clipboard">
+        { !clicked && <img src={ClipboardImg}></img> }
+        { clicked && <span className="retro-font">Copied!</span> }
+      </div>
+
       <span className="Link__text">{link}</span>
     </div>
   </div>
