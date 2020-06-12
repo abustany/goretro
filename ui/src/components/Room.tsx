@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import * as t from '../types';
 
@@ -22,11 +22,13 @@ interface Props {
   link: string;
   onNoteSave: (mood: t.Mood, text: string, id?: number) => void;
   onStateTransition: () => void;
-  onHasFinishedWriting: (ready: boolean) => void;
+  onHasFinishedWriting: (hasFinished: boolean) => void;
 }
 
 export default function({room, userId, link, onNoteSave, onStateTransition, onHasFinishedWriting}: Props) {
   // Refactor nameById and participantById into a same ExtendedParticipant.
+  const [hasFinished, setHasFinished] = useState(false)
+
   const nameById = idToName(room.participants)
   const participantById = new Map(room.participants.map(p => [p.clientId, p]))
 
@@ -35,6 +37,10 @@ export default function({room, userId, link, onNoteSave, onStateTransition, onHa
   const isWaiting = room.state === t.RoomState.WAITING_FOR_PARTICIPANTS
   const isRunning = room.state === t.RoomState.RUNNING
   const isReviewing = room.state === t.RoomState.REVIEWING
+  const handleHasFinishedWriting = (hasFinished: boolean) => {
+    setHasFinished(hasFinished)
+    onHasFinishedWriting(hasFinished)
+  }
 
   return <div className="Room">
     { !isWaiting && <div className="Room__notes">
@@ -42,7 +48,7 @@ export default function({room, userId, link, onNoteSave, onStateTransition, onHa
         <Column
           key={mood}
           icon={ moodIcons[mood] }
-          editable={isRunning}
+          editable={isRunning && (isHost || !hasFinished)}
           participants={nameById}
           notes={ notesByMood[mood] }
           onNoteSave={ (text, id) => onNoteSave(mood, text, id) }
@@ -54,7 +60,7 @@ export default function({room, userId, link, onNoteSave, onStateTransition, onHa
 
     <div className="Room__info">
       <div className="Room__info-centered">
-        <StatusParticipant state={room.state} onHasFinishedWriting={isHost ? undefined : onHasFinishedWriting}/>
+        <StatusParticipant state={room.state} onHasFinishedWriting={isHost ? undefined : handleHasFinishedWriting}/>
         { isWaiting && <Link link={link}/> }
       </div>
 
