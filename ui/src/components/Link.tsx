@@ -24,7 +24,7 @@ export default function({link}: Props) {
     <h2>Invite participants!</h2>
     <div className="Link" onClick={handleCopy}>
       <img className="Link__icon" src={ClipboardImg}></img>
-      <span className={`Link__confirmation ${clicked ? '-clicked' : ''}`}>{ clicked ? 'Copied ✓' : 'Copy' }</span>
+      <span className={`Link__confirmation ${clicked ? 'Link__confirmation--clicked' : ''}`}>{ clicked ? 'Copied ✓' : 'Copy' }</span>
       <span className="Link__text">{link}</span>
     </div>
   </div>

@@ -28,7 +28,7 @@ interface Props {
 export default function({room, userId, link, onNoteSave, onStateTransition, onHasFinishedWriting}: Props) {
   // Refactor nameById and participantById into a same ExtendedParticipant.
   const nameById = idToName(room.participants)
-  const participantById = idToParticipant(room.participants)
+  const participantById = new Map(room.participants.map(p => [p.clientId, p]))
 
   const notesByMood = moodToNotes(room.notes)
   const isHost = userId === room.hostId
@@ -106,12 +106,6 @@ function idToName(participants: t.Participant[]): Map<string, string> {
     }
   })
 
-  return res
-}
-
-function idToParticipant(participants: t.Participant[]): Map<string, t.Participant> {
-  const res = new Map()
-  participants.forEach(p => res.set(p.clientId, p))
   return res
 }
 

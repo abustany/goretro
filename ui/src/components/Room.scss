@@ -1,6 +1,6 @@
 @import "../stylesheets/config.scss";
 
-$_Room__v-margin: 1.5rem;
+$Room--vMargin: 1.5rem;
 
 .Room {
   flex-grow: 1;
@@ -36,7 +36,7 @@ $_Room__v-margin: 1.5rem;
     color: $redAltColor;
   }
 
-  .-vs {
+  .Room__info-block {
    margin: 0.5rem 0;
   }
 
@@ -55,19 +55,19 @@ $_Room__v-margin: 1.5rem;
     justify-content: center;
 
     > * {
-      margin: $_Room__v-margin 0;
+      margin: $Room--vMargin 0;
     }
   }
 
   .Room__info-bottom > * {
-    margin: $_Room__v-margin 0;
+    margin: $Room--vMargin 0;
   }
 
   .Room__info-footer {
     background-color: $darkLighterColor;
 
     > * {
-      margin: $_Room__v-margin 0;
+      margin: $Room--vMargin 0;
       // margin-bottom: 0 !important;
     }
   }
