@@ -1,18 +1,21 @@
 import React from 'react';
 
 import './Participants.scss'
+import * as t from '../types';
 
 interface Props {
-  participants: Map<string, string>
+  participants: Map<string, t.Participant>
+  participantNames: Map<string, string>
   hostId: string
   userId: string
 }
 
-export default function({participants, hostId, userId}: Props){
+export default function({participants, participantNames, hostId, userId}: Props){
   return <div className="Participants">
     <h2>Online ({ participants.size })</h2>
-    <ul>{ Array.from(participants).map(([id, name]) => {
+    <ul>{ Array.from(participantNames).map(([id, name]) => {
       let badgesArr = []
+      if (participants.get(id)?.finishedWriting) badgesArr.push(flagComponent('READY'))
       if (id === userId) badgesArr.push(flagComponent('YOU'))
       if (id === hostId) badgesArr.push(flagComponent('HOST'))
 

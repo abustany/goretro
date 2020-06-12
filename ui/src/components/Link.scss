@@ -2,6 +2,7 @@
 
 .Link {
   display: inline-flex;
+  flex-direction: column;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
@@ -20,6 +21,8 @@
   &:active {
     background-color: $darkLighterColor;
   }
+
+  position: relative;
 }
 
 .Link > * {
@@ -28,10 +31,21 @@
 
 .Link__text {
   font-family: monospace;
+  position: relative;
 }
 
-.Link__icon {
-  font-size: 2rem;
-  // -webkit-filter: grayscale(100%);
-  // filter: grayscale(100%);
+.Link__clipboard {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  height: 4rem;
+
+  img {
+    height: 100%;
+    width: auto;
+  }
+
+  font-family: $fontTitle;
 }

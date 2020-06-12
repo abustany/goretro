@@ -91,6 +91,10 @@ export class Connection {
     return this.dataCommand({name: 'save-note', noteId, text, mood})
   }
 
+  async setFinishedWriting(hasFinished: boolean) {
+    return this.dataCommand({name: 'set-finished-writing', finished: hasFinished})
+  }
+
   // END OF API
 
   async dataCommand<T>(payload: unknown): Promise<T> {

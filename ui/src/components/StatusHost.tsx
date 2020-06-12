@@ -27,7 +27,7 @@ export default function({state, onStateTransition}: Props) {
   if (!descr && !btn) return null
   return <div className="StatusHost">
     <h2>Host Controls</h2>
-    { btn && <button onClick={onStateTransition} data-test-id={btn.testId}>{ btn.text }</button> }
+    { btn && <button className="Room__info-block" onClick={onStateTransition} data-test-id={btn.testId}>{ btn.text }</button> }
     { descr && <div className="Room__status">{ descr }</div> }
   </div>
 }

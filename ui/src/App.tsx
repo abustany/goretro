@@ -64,6 +64,7 @@ function mainComponent(connection: Connection, state: types.State, dispatch: Dis
     link={window.location.toString()}
     onNoteSave={(mood, text, id) => { handleNoteSave(connection, state, dispatch, mood, text, id) }}
     onStateTransition={() => { handleRoomStateIncrement(connection, state) }}
+    onHasFinishedWriting={(hasFinished) => { handleFinishedWriting(connection, hasFinished)} }
   />
 }
 
@@ -94,6 +95,10 @@ function handleNoteSave(connection: Connection, state: types.State, dispatch: Di
   }
 }
 
+function handleFinishedWriting(connection: Connection, hasFinished: boolean) {
+  connection.setFinishedWriting(hasFinished)
+}
+
 // Connect the EventSource to the State via Actions.
 function connect(connection: Connection, dispatch: Dispatch<types.Action>): void {
   connection.onMessage((message) => {
@@ -114,6 +119,9 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
         break
       case "participant-removed":
         dispatch({type: 'roomParticipantRemoved', payload: message.payload})
+        break
+      case "participant-updated":
+        dispatch({type: 'roomParticipantUpdated', payload: message.payload})
         break
       case "host-changed":
         dispatch({type: 'hostChange', payload: message.payload})
@@ -205,6 +213,17 @@ function reducer(state: types.State, action: types.Action): types.State {
         room: {
           ...state.room!,
           participants: state.room!.participants.filter((p) => p.clientId !== action.payload.clientId),
+        }
+      }
+    case 'roomParticipantUpdated':
+      const updatedParticipants = [...state.room!.participants]
+      const updatedIndex = updatedParticipants.findIndex((p) => p.clientId === action.payload.clientId)
+      updatedParticipants[updatedIndex] = action.payload
+      return {
+        ...state,
+        room: {
+          ...state.room!,
+          participants: updatedParticipants
         }
       }
     case 'roomStateChanged':

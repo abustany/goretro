@@ -1,6 +1,7 @@
 export interface Participant {
   clientId: string;
   name: string;
+  finishedWriting?: boolean;
 };
 
 export enum RoomState {
@@ -61,6 +62,9 @@ export type Action = {
   payload: Participant;
 } | {
   type: 'roomParticipantRemoved';
+  payload: Participant;
+} | {
+  type: 'roomParticipantUpdated';
   payload: Participant;
 } | {
   type: 'hostChange';

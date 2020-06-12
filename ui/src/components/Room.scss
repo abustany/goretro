@@ -1,5 +1,7 @@
 @import "../stylesheets/config.scss";
 
+$Room--vMargin: 1.5rem;
+
 .Room {
   flex-grow: 1;
   flex-shrink: 0;
@@ -23,11 +25,20 @@
   padding: 0 0.5rem;
 }
 
-
 .Room__info {
-  @extend ._Room-footer-style;
-
   flex-grow: 1;
+
+  text-align: center;
+
+  h2 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: $redAltColor;
+  }
+
+  .Room__info-block {
+   margin: 0.5rem 0;
+  }
 
   // Inner
   display: flex;
@@ -44,40 +55,21 @@
     justify-content: center;
 
     > * {
-      @extend ._Room-footer-section;
+      margin: $Room--vMargin 0;
     }
   }
 
   .Room__info-bottom > * {
-    @extend ._Room-footer-section;
-  }
-}
-
-.Room__host {
-  @extend ._Room-footer-style;
-  background-color: $darkLighterColor;
-
-  > * {
-    @extend ._Room-footer-section;
-    // margin-bottom: 0 !important;
-  }
-}
-
-._Room-footer-section {
-  margin: 1.5rem 0;
-}
-
-._Room-footer-style {
-  text-align: center;
-
-  h2 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-    color: $redAltColor;
+    margin: $Room--vMargin 0;
   }
 
-  h2 ~ * {
-    margin: 0.25rem;
+  .Room__info-footer {
+    background-color: $darkLighterColor;
+
+    > * {
+      margin: $Room--vMargin 0;
+      // margin-bottom: 0 !important;
+    }
   }
 }
 
