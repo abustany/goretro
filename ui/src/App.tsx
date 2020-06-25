@@ -2,6 +2,9 @@ import React, { useReducer, useEffect, Dispatch } from 'react';
 
 import { Connection, Message } from './connection';
 import { API } from './api';
+import { setURLParam, getURLParam } from './utils'
+import Reducer from './reducer'
+
 import * as types from './types';
 
 import AppGlobalMessage from './components/AppGlobalMessage';
@@ -11,41 +14,59 @@ import Room from './components/Room';
 
 import './App.scss'
 
+const ERROR_START_FAILED = "Couldn't reach the service."
+const NAME_LS_KEY: string = "nickname"
+const ROOMID_PARAM = "id"
+
+const initialState: types.State = {
+  lagging: false,
+  name: localStorage.getItem(NAME_LS_KEY) || "",
+  roomId: getURLParam(ROOMID_PARAM) || "",
+  room: null,
+
+  connected: false,
+  identified: false,
+}
+
 interface Props {
   connection: Connection
   api: API
 }
-const nameLocalStorageKey: string = "nickname"
-const ROOMID_PARAM = `id`
-
 export default function({connection, api}: Props) {
-  const [state, dispatch] = useReducer(reducer, initialState)
+  const [state, dispatch] = useReducer(Reducer, initialState)
 
   useEffect(() => {
-    connect(connection, dispatch)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    configureConnection(connection, dispatch)
+  }, [connection])
+
+  // (Re)connect
+  useEffect(() => {
+    if (state.connected) return
+    connection.start().then(() => {
+      dispatch({type: 'connectionStarted'})
+    }).catch((err) => {
+      console.log(err)
+      dispatch({type: 'error', payload: ERROR_START_FAILED})
+    })
+  }, [connection, state.connected])
 
   // Identify on name change when connected
   useEffect(() => {
-    if (state.connected && state.name)
-      api.identify(state.name).then(() => {
-        dispatch({type: 'identifyReceived', payload: true})
-      })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.connected, state.name])
+    if (!(state.connected && state.name)) return
+    api.identify(state.name).then(() => {
+      dispatch({type: 'identifyReceived', payload: true})
+    })
+  }, [api, state.connected, state.name])
 
   // Join or Create room when identified
   useEffect(() => {
-    if (state.identified) {
-      if (state.roomId) {
-        api.joinRoom(state.roomId)
-      } else {
-        api.createRoom()
-      }
+    if (!state.identified) return
+    if (state.roomId) {
+      api.joinRoom(state.roomId)
+    } else {
+      api.createRoom()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.identified, state.roomId])
+  }, [api, state.identified, state.roomId])
 
   return (
     <div className="App">
@@ -58,6 +79,8 @@ export default function({connection, api}: Props) {
     </div>
   );
 }
+
+// Components
 
 function mainComponent(api: API, userId: string, state: types.State, dispatch: Dispatch<types.Action>) {
   if (state.error) {
@@ -87,10 +110,12 @@ const disconnectedComponent = () => <div className="App_warning">
   <div className="indication">The connection has been lost, you may not be up to date.</div>
 </div>
 
+// Handlers
+
 function handleNameSet(dispatch: Dispatch<types.Action>, name: string): void {
   const trimmedName = name.trim()
   if (!trimmedName) return
-  localStorage.setItem(nameLocalStorageKey, trimmedName)
+  localStorage.setItem(NAME_LS_KEY, trimmedName)
 
   dispatch({type: 'name', payload: trimmedName})
 }
@@ -129,7 +154,7 @@ function handleMessage(message: Message, dispatch: Dispatch<types.Action>): void
       const room = message.payload
       room.notes = restructureRoomNotes(room.notes)
       // Change URL
-      writeRoomIdInURL(message.payload.id)
+      setURLParam(ROOMID_PARAM, message.payload.id)
       dispatch({type: 'roomReceive', payload: room})
       break
     case "participant-added":
@@ -147,8 +172,13 @@ function handleMessage(message: Message, dispatch: Dispatch<types.Action>): void
   }
 }
 
-// Connect the EventSource to the State via Actions.
-function connect(connection: Connection, dispatch: Dispatch<types.Action>): void {
+function restructureRoomNotes(notes: {[clientId: string]: types.Note[]}): types.Note[] {
+  return Object.values(notes).flat();
+}
+
+// Misc.
+
+function configureConnection(connection: Connection, dispatch: Dispatch<types.Action>): void {
   connection.onMessage((message) => {
     handleMessage(message, dispatch)
   });
@@ -160,125 +190,4 @@ function connect(connection: Connection, dispatch: Dispatch<types.Action>): void
   connection.onLost(() => {
     dispatch({type: 'connectionLost'})
   });
-
-  connection.start().then(() => {
-    dispatch({type: 'connectionStarted'})
-  }).catch((err) => {
-    dispatch({type: 'connectionError', payload: err.toString()})
-  })
-}
-
-// State
-
-const initialState: types.State = {
-  lagging: false,
-  name: localStorage.getItem(nameLocalStorageKey) || "",
-  roomId: readRoomIdFromURL() || "",
-  room: null,
-
-  connected: false,
-  identified: false,
-}
-
-function reducer(state: types.State, action: types.Action): types.State {
-  switch (action.type) {
-    case 'connectionLagging':
-      return {...state, lagging: action.payload}
-    case 'connectionError':
-      return {...state, error: action.payload}
-    case 'connectionStarted':
-      return {...state, connected: true}
-    case 'connectionLost':
-      return {
-        ...state,
-        connected: false,
-        identified: false,
-        room: null,
-      }
-    case 'name':
-      return {...state, name: action.payload}
-    case 'identifyReceived':
-      return {...state, identified: action.payload}
-    case 'roomIdSet':
-      return {...state, roomId: action.payload}
-    case 'roomReceive':
-      return {...state, room: action.payload}
-    case 'roomParticipantAdd':
-      return {
-        ...state,
-        room: {
-          ...state.room!,
-          participants: [
-            ...state.room!.participants,
-            action.payload,
-          ]
-        }
-      }
-    case 'roomParticipantRemoved':
-      return {
-        ...state,
-        room: {
-          ...state.room!,
-          participants: state.room!.participants.filter((p) => p.clientId !== action.payload.clientId),
-        }
-      }
-    case 'roomParticipantUpdated':
-      const updatedParticipants = [...state.room!.participants]
-      const updatedIndex = updatedParticipants.findIndex((p) => p.clientId === action.payload.clientId)
-      updatedParticipants[updatedIndex] = action.payload
-      return {
-        ...state,
-        room: {
-          ...state.room!,
-          participants: updatedParticipants
-        }
-      }
-    case 'roomStateChanged':
-      return {...state, room: {...state.room!, state: action.payload}}
-    case 'hostChange':
-      return {...state, room: {...state.room!, hostId: action.payload}}
-    case 'noteCreated':
-      return {
-        ...state,
-        room: {
-          ...state.room!,
-          notes: [
-            ...state.room!.notes,
-            action.payload,
-          ]
-        }
-      }
-    case 'noteUpdated':
-      const {noteId, text} = action.payload
-      const notes = [...state.room!.notes]
-      const noteIndex = notes.findIndex((n: types.Note) => n.id === noteId)!
-      notes[noteIndex] = {
-        ...notes[noteIndex],
-        text: text,
-      }
-      return {
-        ...state,
-        room: {
-          ...state.room!,
-          notes: notes,
-        }
-      }
-    default:
-      throw new Error(`Unknown action ${action}`);
-  }
-}
-
-function restructureRoomNotes(notes: {[clientId: string]: types.Note[]}): types.Note[] {
-  return Object.values(notes).flat();
-}
-
-// URL
-
-function writeRoomIdInURL(roomId: string) {
-  window.history.replaceState(null, document.title, `/?${ROOMID_PARAM}=${roomId}`);
-}
-
-function readRoomIdFromURL(): string | null {
-  const roomId = (new URL(window.location.toString())).searchParams.get(ROOMID_PARAM)
-  return roomId || null
 }

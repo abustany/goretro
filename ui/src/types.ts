@@ -47,7 +47,7 @@ export type Action = {
   type: 'connectionLagging';
   payload: boolean; // connected or not
 } | {
-  type: 'connectionError';
+  type: 'error';
   payload: string; // error message
 } | {
   type: 'connectionStarted';

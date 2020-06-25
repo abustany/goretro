@@ -1,30 +1,13 @@
-import { sleep } from './utils'
-
-const MONITORING_INTERVAL_MS = 2000;
-const KEEPALIVE_EXPECTED_INTERVAL_MS = 12000
-const UNKNOWN_CLIENT_REQUEST_BODY = "Unknown client\n"
+import * as u from './utils'
 
 export type Message = {name: string} & Record<string, any>
-type LaggingCallback = (connected: boolean) => void;
-type MessageCallback = (message: Message) => void;
-type LostCallback = () => void;
-
-interface HelloResponse {
-  eventsUrl: string;
-}
-
-class UnknownClientError extends Error {
-  constructor() {
-    super();
-    this.name = "UnknownClientError";
-  }
-}
 
 // A connection is either open (when `start`) or close (no `start` or it's been Lost).
 // When open, it allows sending commands with dataCommand.
 // When open, it also maintains an SSE connection which receives messages from the backend. This connection can be lagging, meaning it's not certain anymore that messages are received.
 export class Connection {
-  clientId: string
+  public clientId: string
+
   private secret: string
   private baseUrl: string
 
@@ -34,14 +17,14 @@ export class Connection {
   private sseLagging?: boolean
   private sseUrl?: string
 
-  private commandsChain?: Promise<unknown>
+  private commandsChain?: Promise<any>
   private startServingCommands?: (value?: unknown) => void
 
   private lostSession?: boolean
 
-  messageListeners: MessageCallback[] = [];
-  laggingListeners: LaggingCallback[] = [];
-  lostListeners: LostCallback[] = [];
+  private messageListeners: MessageCallback[] = [];
+  private laggingListeners: LaggingCallback[] = [];
+  private lostListeners: LostCallback[] = [];
 
   constructor(baseUrl: string, clientId: string, secret: string) {
     this.baseUrl = baseUrl;
@@ -49,11 +32,11 @@ export class Connection {
     this.secret = secret;
   }
 
-  public async start(): Promise<void> {
-    this.restart()
-  }
+  public onMessage(callback: MessageCallback) { this.messageListeners.push(callback) }
+  public onLagging(callback: LaggingCallback) { this.laggingListeners.push(callback) }
+  public onLost(callback: LostCallback) { this.lostListeners.push(callback) }
 
-  public async restart() {
+  public async start(): Promise<void> {
     this.lostSession = false
     this.sseLagging = false
     this.resetCommandsQueue()
@@ -67,27 +50,59 @@ export class Connection {
     })
   }
 
-  private resetCommandsQueue() {
-    const [promise, resolver] = makeUnresolvedPromise()
+  public async restart(): Promise<void> {
+    return this.start()
+  }
+
+  public async dataCommand<T>(payload: unknown): Promise<T> {
+    this.commandsChain = this.commandsChain!.catch(() => {})
+      .then(() => {
+        if (this.lostSession) return u.makeUnresolvablePromise<T>()
+        return this.rawCommand<T>({name: 'data', clientId: this.clientId, secret: this.secret, payload: payload})
+      }).catch((err) => {
+        if (err instanceof UnknownClientError) return u.makeUnresolvablePromise<T>()
+        throw err
+      })
+    return this.commandsChain
+  }
+
+  private resetCommandsQueue(): void {
+    const [promise, resolver] = u.makeUnresolvedPromise()
     this.commandsChain = promise
     this.startServingCommands = resolver
   }
 
-  private ensureSSEMonitoring() {
+  private async createSession(): Promise<HelloResponse> {
+    return this.rawCommand<HelloResponse>({name: 'hello', clientId: this.clientId, secret: this.secret})
+  }
+
+  private async resumeSession(): Promise<HelloResponse> {
+    return this.rawCommand<any>({name: 'resume', clientId: this.clientId, secret: this.secret})
+  }
+
+  private handleLostSession(): void {
+    if (this.lostSession) return
+    this.lostSession = true
+
+    this.resetCommandsQueue()
+    this.lostListeners.forEach(l => l());
+  }
+
+  private ensureSSEMonitoring(): void {
     this.sseLastKeepAliveAt = Date.now() // restart grace period
     if (this.sseMonitor) return
 
     this.sseMonitor = setInterval(() => {
       const sinceLastAlive = (Date.now() - this.sseLastKeepAliveAt!)
-      const laggingNow = (sinceLastAlive > KEEPALIVE_EXPECTED_INTERVAL_MS)
+      const laggingNow = (sinceLastAlive > Connection.KEEPALIVE_EXPECTED_INTERVAL_MS)
       if (this.sseLagging !== laggingNow) {
         this.sseLagging = laggingNow
         this.laggingListeners.forEach(l => l(laggingNow));
       }
-    }, MONITORING_INTERVAL_MS)
+    }, Connection.MONITORING_INTERVAL_MS)
   }
 
-  private launchSSE() {
+  private launchSSE(): void {
     this.sseConn = new EventSource(this.sseUrl!);
 
     this.sseConn.onopen = () => {}
@@ -113,113 +128,67 @@ export class Connection {
     }
   }
 
-  private relaunchSSE() {
+  private relaunchSSE(): void {
     this.sseConn?.close()
-    this.recoverSession().then(this.launchSSE)
+    this.resumeSession().then(() => this.launchSSE)
   }
 
-  private handleLost() {
-    if (this.lostSession) return
-    this.lostSession = true
+  private async rawCommand<T>(command: unknown): Promise<T> {
+    return u.withRetry(async () => {
+      const res = await fetch(`${this.baseUrl}/command`, {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(command),
+      }).catch(() => { throw new RetriableError() })
 
-    this.resetCommandsQueue()
-    this.lostListeners.forEach(l => l());
-  }
+      if (res.status === 200) return res.json()
 
-  public async dataCommand<T>(payload: unknown): Promise<T> {
-    this.commandsChain = this.commandsChain!
-      .catch(() => {})
-      .then(() => {
-        if (this.lostSession) return makeUnresolvablePromise<T>()
-        return rawCommand<T>(this.baseUrl, {name: 'data', clientId: this.clientId, secret: this.secret, payload: payload})
-      }).catch((err) => {
-        if (err instanceof UnknownClientError) {
-          this.handleLost()
-          return makeUnresolvablePromise<T>()
-        } else {
-          throw err
-        }
-      })
-    return this.commandsChain as Promise<T>
-  }
+      const body = await res.text()
 
-  public onMessage(callback: MessageCallback) { this.messageListeners.push(callback) }
-  public onLagging(callback: LaggingCallback) { this.laggingListeners.push(callback) }
-  public onLost(callback: LostCallback) { this.lostListeners.push(callback) }
-
-  private async createSession() {
-    return rawCommand<HelloResponse>(this.baseUrl, {name: 'hello', clientId: this.clientId, secret: this.secret})
-  }
-
-  private async recoverSession() {
-    // TODO:
-    // - the command doesn't exist in the backend
-    // - <any>
-    return rawCommand<any>(this.baseUrl, {name: 'resume', clientId: this.clientId, secret: this.secret}).catch((err) => {
-      if (err instanceof UnknownClientError) {
-        this.handleLost()
+      if (body === Connection.UNKNOWN_CLIENT_REQUEST_BODY) {
+        this.handleLostSession()
+        throw new UnknownClientError()
+      } else if (res.status >= 500) {
+        throw new RetriableError()
+      } else {
+        const msg = {command, response: {body, status: res.status}}
+        throw new UnexpectedCommandError(JSON.stringify(msg))
       }
-
-      throw err
-    })
+    }, {only: [RetriableError]})
   }
+
+  private static readonly MONITORING_INTERVAL_MS = 2000;
+  private static readonly KEEPALIVE_EXPECTED_INTERVAL_MS = 12000
+  private static readonly UNKNOWN_CLIENT_REQUEST_BODY = "Unknown client\n"
+
 }
 
-// TODO: Possibly handle the UnknownClient logic in rawCommand. Requires rawCommand to be part of the class.
-async function rawCommand<T>(baseUrl: string, command: unknown, attempt?: number): Promise<T> {
-  // TODO: Extract retry logic?
+type LaggingCallback = (connected: boolean) => void;
+type MessageCallback = (message: Message) => void;
+type LostCallback = () => void;
 
-  if (attempt === undefined) attempt = 1
-
-  const retry = async () => {
-    const wait = Math.min((2 ** (attempt! - 1)) * 100, 10000)
-    await sleep(wait)
-    return rawCommand<T>(baseUrl, command, attempt! + 1)
-  }
-
-  // Retry networking errors
-  let res;
-  try {
-    res = await fetch(`${baseUrl}/command`, {
-      method: 'POST',
-      mode: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(command),
-    })
-  } catch(e) {
-    return await retry()
-  }
-
-  // Manage dropped session & Server errors
-  if (res.status !== 200) {
-    const body = await res.text()
-
-    if (body === UNKNOWN_CLIENT_REQUEST_BODY) {
-      throw new UnknownClientError()
-    }
-
-    if (res.status >= 500) {
-      return await retry()
-    }
-
-    console.log(command)
-    console.log(body)
-    throw new Error(`Unexpected Error for ${command}: ${res.status}, ${body}`)
-  }
-
-  return res.json()
+interface HelloResponse {
+  eventsUrl: string;
 }
 
-function makeUnresolvedPromise(): [Promise<unknown>, (value?: unknown) => void] {
-  let outerResolve: (value?: unknown) => void
-  const promise = new Promise((innerResolve, _) => { outerResolve = innerResolve })
-  outerResolve = outerResolve!
-  return [promise, outerResolve]
+class UnknownClientError extends Error {
+  constructor() {
+    super();
+    this.name = "UnknownClientError";
+  }
 }
-
-function makeUnresolvablePromise<T>() {
-  // unresolved Promise
-  return new Promise<T>(() => {})
+class UnexpectedCommandError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UnexpectedCommandError";
+  }
+}
+class RetriableError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = "RetriableError";
+  }
 }
