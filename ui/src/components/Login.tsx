@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 import './Login.scss'
 
@@ -9,6 +9,9 @@ interface LoginProps {
 
 export default function({initialName, onNameSet}: LoginProps) {
   const [name, setName] = useState(initialName || "");
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => ref.current?.focus(), [ref])
 
   return <div className="Login">
     <input
@@ -18,6 +21,7 @@ export default function({initialName, onNameSet}: LoginProps) {
       value={name}
       onKeyDown={(e) => { e.key === 'Enter' && onNameSet(name) }}
       data-test-id="login-nickname"
+      ref={ref}
     />
 
     <button data-test-id="login-submit" onClick={() => { onNameSet(name) }}>Let me in!</button>
