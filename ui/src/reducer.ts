@@ -14,6 +14,7 @@ export default function(state: types.State, action: types.Action): types.State {
         ...state,
         connected: false,
         identified: false,
+        lagging: false,
         room: null,
       }
     case 'name':

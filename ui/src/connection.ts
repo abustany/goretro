@@ -42,7 +42,7 @@ export class Connection {
     this.sseLagging = false
     this.resetCommandsQueue()
     // Start monitoring here already, as we expect it in fact from there on.
-    this.ensureSSEMonitoring()
+    this.ensureSSEMonitored()
 
     return this.createSession().then((helloResponse) => {
       this.startServingCommands!() // Could also be in launchSSE
@@ -91,24 +91,20 @@ export class Connection {
     this.lostListeners.forEach(l => l());
   }
 
-  private ensureSSEMonitoring(): void {
+  private ensureSSEMonitored(): void {
     this.sseLastKeepAliveAt = Date.now() // restart grace period
     if (this.sseMonitor) return
 
-    this.sseMonitor = setInterval(() => {
-      const sinceLastAlive = (Date.now() - this.sseLastKeepAliveAt!)
-      const laggingNow = (sinceLastAlive > Connection.KEEPALIVE_EXPECTED_INTERVAL_MS)
-      if (this.sseLagging !== laggingNow) {
-        this.sseLagging = laggingNow
-        this.laggingListeners.forEach(l => l(laggingNow));
-      }
-    }, Connection.MONITORING_INTERVAL_MS)
+    this.sseMonitor = setInterval(() => this.sseMonitoring(), Connection.MONITORING_INTERVAL_MS)
   }
 
   private launchSSE(): void {
     this.sseConn = new EventSource(this.sseUrl!);
 
-    this.sseConn.onopen = () => {}
+    this.sseConn.onopen = () => {
+      this.sseLastKeepAliveAt = Date.now()
+      this.sseMonitoring()
+    }
 
     this.sseConn.onerror = (_) => {
       // The error being passed isn't descriptive.
@@ -134,6 +130,15 @@ export class Connection {
   private relaunchSSE(): void {
     this.sseConn?.close()
     this.resumeSession().then(() => this.launchSSE)
+  }
+
+  private sseMonitoring(): void {
+    const sinceLastAlive = (Date.now() - this.sseLastKeepAliveAt!)
+    const laggingNow = (sinceLastAlive > Connection.KEEPALIVE_EXPECTED_INTERVAL_MS)
+    if (this.sseLagging !== laggingNow) {
+      this.sseLagging = laggingNow
+      this.laggingListeners.forEach(l => l(laggingNow));
+    }
   }
 
   private async rawCommand<T>(command: unknown): Promise<T> {
