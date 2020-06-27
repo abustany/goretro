@@ -422,7 +422,7 @@ func (h *Handler) janitor() {
 }
 
 func (h *Handler) closeExpiredConnections() {
-	const pausedConnectionTTL = 3 * time.Minute
+	const pausedConnectionTTL = 30 * time.Second
 
 	h.lock.Lock()
 	defer h.lock.Unlock()
