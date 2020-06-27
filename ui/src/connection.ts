@@ -2,7 +2,8 @@ import * as u from './utils'
 
 export type Message = {name: string} & Record<string, any>
 
-// A connection is either open (when `start`) or close (no `start` or it's been Lost).
+// A connection is either open (when `start` has successfully ran) or close (no `start` or session has been Lost).
+// When open, a Session exists.
 // When open, it allows sending commands with dataCommand.
 // When open, it also maintains an SSE connection which receives messages from the backend. This connection can be lagging, meaning it's not certain anymore that messages are received.
 export class Connection {
@@ -76,8 +77,10 @@ export class Connection {
     return this.rawCommand<HelloResponse>({name: 'hello', clientId: this.clientId, secret: this.secret})
   }
 
-  private async resumeSession(): Promise<HelloResponse> {
-    return this.rawCommand<any>({name: 'resume', clientId: this.clientId, secret: this.secret})
+  // TODO: Temporary work-around, see Issues.
+  private async resumeSession(): Promise<any> {
+    // Triggers handleLostSession if session has been lost.
+    this.dataCommand({name: 'identify', nickname: localStorage.getItem('nickname')})
   }
 
   private handleLostSession(): void {
