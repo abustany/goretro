@@ -168,10 +168,10 @@ export class Connection {
     }, {only: [RetriableError]})
   }
 
-  private static readonly MONITORING_INTERVAL_MS = 2000;
-  private static readonly KEEPALIVE_EXPECTED_INTERVAL_MS = 12000
+  private static readonly MONITORING_INTERVAL_MS = 1000;
+  private static readonly KEEPALIVE_BE_MS = 3000
+  private static readonly KEEPALIVE_EXPECTED_INTERVAL_MS = Connection.KEEPALIVE_BE_MS + 1000
   private static readonly UNKNOWN_CLIENT_REQUEST_BODY = "Unknown client\n"
-
 }
 
 type LaggingCallback = (connected: boolean) => void;

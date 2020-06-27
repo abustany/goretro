@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	keepAliveInterval = 10 * time.Second
+	keepAliveInterval = 3 * time.Second
 )
 
 var (
@@ -408,7 +408,7 @@ func (h *Handler) markConnectionPaused(clientID ClientID) {
 }
 
 func (h *Handler) janitor() {
-	ticker := time.NewTicker(time.Minute)
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
 	for {
