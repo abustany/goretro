@@ -22,6 +22,9 @@ button, input[type=submit] {
   &:active {
     background-color: $redAltColor;
   }
+
+  padding-right: 1rem;
+  padding-left: 1rem;
 }
 
 html {
