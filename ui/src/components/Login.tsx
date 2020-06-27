@@ -5,9 +5,10 @@ import './Login.scss'
 interface LoginProps {
   onNameSet: (name: string) => void;
   initialName?: string
+  label?: string
 }
 
-export default function({initialName, onNameSet}: LoginProps) {
+export default function({initialName, onNameSet, label}: LoginProps) {
   const [name, setName] = useState(initialName || "");
   const ref = useRef<HTMLInputElement>(null);
 
@@ -24,6 +25,6 @@ export default function({initialName, onNameSet}: LoginProps) {
       ref={ref}
     />
 
-    <button data-test-id="login-submit" onClick={() => { onNameSet(name) }}>Let me in!</button>
+    {label && <button data-test-id="login-submit" onClick={() => { onNameSet(name) }}>{ label }</button>}
   </div>
 }

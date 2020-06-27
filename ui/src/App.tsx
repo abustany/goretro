@@ -88,7 +88,7 @@ function mainComponent(api: API, userId: string, state: types.State, dispatch: D
   }
 
   if (!state.name) {
-    return <Login onNameSet={(name) => handleNameSet(dispatch, name) }/>
+    return <Login onNameSet={(name) => handleNameSet(dispatch, name)} label="Let me in!"/>
   }
 
   if (!state.room) {
@@ -102,6 +102,7 @@ function mainComponent(api: API, userId: string, state: types.State, dispatch: D
     onNoteSave={(mood, text, id) => { handleNoteSave(api, userId, state, dispatch, mood, text, id) }}
     onStateTransition={() => { handleRoomStateIncrement(api, state) }}
     onHasFinishedWriting={(hasFinished) => { handleFinishedWriting(api, hasFinished)} }
+    onNameUpdate={(name) => handleNameSet(dispatch, name)}
   />
 }
 

@@ -1,5 +1,8 @@
 .Login {
   text-align: center;
+  input {
+    max-width: 10rem;
+  }
 }
 
 .Login > * {

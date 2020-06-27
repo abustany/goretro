@@ -23,9 +23,10 @@ interface Props {
   onNoteSave: (mood: t.Mood, text: string, id?: number) => void;
   onStateTransition: () => void;
   onHasFinishedWriting: (hasFinished: boolean) => void;
+  onNameUpdate: (name: string) => void;
 }
 
-export default function({room, userId, link, onNoteSave, onStateTransition, onHasFinishedWriting}: Props) {
+export default function({room, userId, link, onNoteSave, onStateTransition, onHasFinishedWriting, onNameUpdate}: Props) {
   // Refactor nameById and participantById into a same ExtendedParticipant.
   const [hasFinished, setHasFinished] = useState(false)
 
@@ -66,7 +67,7 @@ export default function({room, userId, link, onNoteSave, onStateTransition, onHa
 
       <div className="Room__info-bottom">
         { isReviewing && <button onClick={() => handleExport(room.notes, nameById)}>Export</button> }
-        <Participants participants={participantById} participantNames={nameById} hostId={room.hostId} userId={userId}/>
+        <Participants participants={participantById} participantNames={nameById} hostId={room.hostId} userId={userId} onNameUpdate={onNameUpdate}/>
       </div>
 
       <div className="Room__info-footer">
