@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+import { toClipboard } from '../utils'
+
 import './Link.scss'
 import ClipboardImg from '../images/clipboard.png'
 
@@ -16,7 +18,7 @@ export default function({link}: Props) {
   }, [clicked])
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(link)
+    toClipboard(link)
     setClicked(true)
   }
 
