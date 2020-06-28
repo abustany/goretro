@@ -62,3 +62,25 @@ export function makeUnresolvablePromise<T>(): Promise<T> {
   // unresolved Promise
   return new Promise<T>(() => {})
 }
+
+// Clipboard
+
+export function toClipboard(content: string) {
+  // Try multiple ways
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(content)
+  } else {
+    toClipboardWithExecCommand(content)
+  }
+}
+
+function toClipboardWithExecCommand(content: string) {
+  if (!content) return
+  const textArea = document.createElement("textarea");
+  textArea.style.cssText = 'display:hidden;'
+  textArea.value = content
+  document.body.appendChild(textArea);
+  textArea.select();
+  document.execCommand("copy");
+  textArea.remove();
+}
