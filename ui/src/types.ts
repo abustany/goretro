@@ -87,3 +87,15 @@ export type Action = {
   type: 'noteUpdated';
   payload: {noteId: number, text: string}
 }
+
+export enum Chars {
+  EDIT =     '✎',
+  VALIDATE = '✓',
+  CANCEL =   '✕',
+  DELETE =   '␡',
+}
+
+// …
+// ✕␘
+// ⏎ ↵ 💾
+// ␡⌫🗑
