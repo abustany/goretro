@@ -55,9 +55,9 @@ export default function({note, author, editable, onNoteSave, tabIndex}: Props) {
 
   const editBadge = () => <button onClick={handleEdit} className="Note__badge Note__edit" data-test-id="noteeditor-edit">✎</button>
   const authorBadge = () => <em className="Note__badge">{ author }</em>
-  const saveBadge = () => <button key="save" onClick={handleSave} className="Note__badge" data-test-id="noteeditor-save"> ✓ </button>
-  const cancelBadge = () => <button key="cancel" onClick={handleCancelEdition} className="Note__badge" data-test-id="noteeditor-cancel"> ✕ </button>
-  const deleteBadge = () => <button key="delete" onClick={handleDelete} className="Note__badge" data-test-id="noteeditor-delete"> ␡ </button>
+  const saveBadge = () => <button key="save" onClick={handleSave} className="Note__badge" data-test-id="noteeditor-save">✓</button>
+  const cancelBadge = () => <button key="cancel" onClick={handleCancelEdition} className="Note__badge" data-test-id="noteeditor-cancel">✕</button>
+  const deleteBadge = () => <button key="delete" onClick={handleDelete} className="Note__badge" data-test-id="noteeditor-delete">␡</button>
 
   // Logic
 
