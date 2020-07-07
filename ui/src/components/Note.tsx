@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-import * as types from '../types';
+import * as t from '../types';
 
 import './Note.scss'
 
 interface Props {
-  note?: types.Note;
+  note?: t.Note;
   author?: string;
   editable: boolean;
   onNoteSave: (text: string, id?: number) => void;
@@ -53,11 +53,11 @@ export default function({note, author, editable, onNoteSave, tabIndex}: Props) {
 
   // Badges
 
-  const editBadge = () => <button onClick={handleEdit} className="Note__badge Note__edit" data-test-id="noteeditor-edit">✎</button>
+  const editBadge = () => <button onClick={handleEdit} className="Note__badge Note__edit" data-test-id="noteeditor-edit">{t.Chars.EDIT}</button>
   const authorBadge = () => <em className="Note__badge">{ author }</em>
-  const saveBadge = () => <button key="save" onClick={handleSave} className="Note__badge" data-test-id="noteeditor-save"> { isCreate ? "✓" : "✓" } </button>
-  const cancelBadge = () => <button key="cancel" onClick={handleCancelEdition} className="Note__badge" data-test-id="noteeditor-cancel"> ✕ </button>
-  const deleteBadge = () => <button key="delete" onClick={handleDelete} className="Note__badge" data-test-id="noteeditor-delete"> ␡ </button>
+  const saveBadge = () => <button key="save" onClick={handleSave} className="Note__badge" data-test-id="noteeditor-save">{t.Chars.VALIDATE}</button>
+  const cancelBadge = () => <button key="cancel" onClick={handleCancelEdition} className="Note__badge" data-test-id="noteeditor-cancel">{t.Chars.CANCEL}</button>
+  const deleteBadge = () => <button key="delete" onClick={handleDelete} className="Note__badge" data-test-id="noteeditor-delete">{t.Chars.DELETE}</button>
 
   // Logic
 
@@ -114,10 +114,3 @@ function textAreaFocus(textarea: HTMLTextAreaElement | null) {
   textarea.focus()
   textarea.setSelectionRange(textarea.value.length,textarea.value.length);
 }
-
-// ✎
-// …
-// ✓
-// ✕␘
-// ⏎ ↵ 💾
-// ␡⌫🗑

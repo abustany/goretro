@@ -1,25 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 import './Login.scss'
 
-const nameLocalStorageKey: string = "nickname"
-
 interface LoginProps {
   onNameSet: (name: string) => void;
+  initialName?: string
+  label?: string
 }
 
-export default function({onNameSet}: LoginProps) {
-  const [name, setName] = useState(
-    localStorage.getItem(nameLocalStorageKey) || ""
-  );
+export default function({initialName, onNameSet, label}: LoginProps) {
+  const [name, setName] = useState(initialName || "");
+  const ref = useRef<HTMLInputElement>(null);
 
-  const handleSetName = () => {
-    if (name) {
-      const trimmedName = name.trim()
-      localStorage.setItem(nameLocalStorageKey, trimmedName)
-      onNameSet(trimmedName);
-    }
-  }
+  useEffect(() => ref.current?.focus(), [ref])
 
   return <div className="Login">
     <input
@@ -27,10 +20,11 @@ export default function({onNameSet}: LoginProps) {
       placeholder="Nickname"
       onChange={(e) => setName(e.target.value)}
       value={name}
-      onKeyDown={(e) => { e.key === 'Enter' && handleSetName() }}
+      onKeyDown={(e) => { e.key === 'Enter' && onNameSet(name) }}
       data-test-id="login-nickname"
+      ref={ref}
     />
 
-    <button data-test-id="login-submit" onClick={handleSetName}>Let me in!</button>
+    {label && <button data-test-id="login-submit" onClick={() => { onNameSet(name) }}>{ label }</button>}
   </div>
 }

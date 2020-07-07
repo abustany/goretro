@@ -27,13 +27,12 @@
   overflow-y: auto;
 }
 
-// Utils
+.App_warning {
+  position: absolute;
+  width: 100%;
+  top: 0;
+  padding: 0.5rem;
 
-.App__global-message-title {
-  font-size: 2rem;
-  font-family: $fontTitle;
-}
-
-.retro-font {
-  font-family: $fontTitle;
+  background-color: $redAltColor;
+  text-align: center;
 }
