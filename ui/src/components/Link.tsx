@@ -27,7 +27,7 @@ export default function({link}: Props) {
     <div className="Link" onClick={handleCopy}>
       <div className="Link__clipboard">
         { !clicked && <img src={ClipboardImg} alt="Copy to Clipboard"></img> }
-        { clicked && <span className="retro-font">Copied!</span> }
+        { clicked && <span>Copied!</span> }
       </div>
 
       <span className="Link__text">{link}</span>

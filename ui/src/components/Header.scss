@@ -1,3 +1,5 @@
+@import '../stylesheets/config.scss';
+
 .Header {
   padding: 2rem;
   padding-bottom: 0rem;
@@ -6,5 +8,6 @@
 
   h1 {
     margin: 0;
+    font-family: $fontTitle;
   }
 }
